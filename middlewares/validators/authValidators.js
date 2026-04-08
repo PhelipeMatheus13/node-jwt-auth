@@ -17,7 +17,7 @@ const validateRegister = [
         .isLength({ min: 6 }).withMessage("Password must be at least 6 characters long")
         .matches(/[!@#$%^&*(),.?":{}|<>]/).withMessage("Password must contain at least one special character"),
 
-    body("confirm_password")
+    body("confirmPassword")
         .notEmpty().withMessage("Password confirmation is required")
         .custom((value, { req }) => value === req.body.password).withMessage("Passwords do not match"),
 

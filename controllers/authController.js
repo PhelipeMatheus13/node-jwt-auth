@@ -1,33 +1,28 @@
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const User = require("../models/User");
+const authService = require("../services/authService");
+const tokenService = require("../services/tokenService");
 
 /* Register user */ 
 exports.register = async (req, res) => {
     const { name, email, password } = req.body;
 
-    // Check if user exists
-    const userExists = await User.findOne({ email: email });
-    if (userExists) {
-        return res.status(422).json({ msg: "Email already in use, please choose another" });
-    }
-
-    // Hash password
-    const salt = await bcrypt.genSalt(12);
-    const passwordHash = await bcrypt.hash(password, salt);
-
-    const user = new User({
-        name,
-        email,
-        password: passwordHash,
-    });
-
     try {
-        await user.save(); // Save user in database
+        const existingUser = await authService.findUserByEmail(email);
+        if (existingUser) {
+            return res.status(422).json({ msg: "Email already in use, please choose another" });
+        }
+
+        // Hash the password before saving the user
+        const hashedPassword = await authService.hashPassword(password);
+        const newUser = await authService.createUser({
+            name,
+            email,
+            password: hashedPassword
+        });
+
         return res.status(201).json({ msg: "User created successfully" });
     } catch (err) {
-        console.log(err);
-        return res.status(500).json({ msg: "Error creating user" });
+        console.error(err);
+        return res.status(500).json({ msg: "Server error while creating user" });
     }
 };
 
@@ -35,24 +30,65 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
     const { email, password } = req.body;
 
-    // Check if user exists
-    const user = await User.findOne({ email: email });
-    if (!user) {
-        return res.status(404).json({ msg: "User not found" });
-    }
+    try {
+        const user = await authService.findUserByEmail(email);
+        if (!user) {
+            return res.status(404).json({ msg: "User not found" });
+        }
 
-    // Check if password match
-    const checkPassword = await bcrypt.compare(password, user.password);
-    if (!checkPassword) {
-        return res.status(422).json({ msg: "Invalid password" });
+        const passwordMatch = await authService.comparePassword(password, user.password);
+        if (!passwordMatch) {
+            return res.status(422).json({ msg: "Invalid password" });
+        }
+
+        // generate access and refresh tokens
+        const accessToken = await tokenService.generateAccessToken(user._id);
+        const refreshToken = await tokenService.generateRefreshToken(user._id);
+
+        return res.status(200).json({
+            msg: "Login successful",
+            accessToken,
+            refreshToken
+        });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ msg: "Server error during login" });
+    }
+};
+
+exports.refreshToken = async (req, res) => {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+        return res.status(401).json({ msg: "Refresh token is required" });
     }
 
     try {
-        const secret = process.env.SECRET;
-        const token = jwt.sign({ id: user._id }, secret); // Create token
-        return res.status(200).json({ msg: "User logged in successfully", token }); // Return token to client
+        const decoded = await tokenService.verifyRefreshToken(refreshToken);
+        const userId = decoded.id;
+
+        // generate a new access token
+        const newAccessToken = tokenService.generateAccessToken(userId);
+
+        return res.status(200).json({ accessToken: newAccessToken });
     } catch (err) {
-        console.log(err);
-        return res.status(500).json({ msg: "Error trying to login" });
+        console.error(err);
+        return res.status(403).json({ msg: err.message });
+    }
+};
+
+exports.logout = async (req, res) => {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+        return res.status(400).json({ msg: "Refresh token is required" });
+    }
+
+    try {
+        await tokenService.revokeRefreshToken(refreshToken);
+        return res.status(200).json({ msg: "Logged out successfully" });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ msg: "Server error during logout" });
     }
 };

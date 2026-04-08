@@ -15,6 +15,9 @@ function checkToken(req, res, next) {
         next(); // Continue to the next middleware or route handler
     } catch (err) {
         console.log(err);
+        if (err.name === 'TokenExpiredError') {
+            return res.status(401).json({ msg: 'Token expired' });
+        }
         return res.status(400).json({ msg: "Invalid token" });
     }
 }
