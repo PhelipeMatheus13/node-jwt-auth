@@ -4,21 +4,7 @@ const User = require("../models/User");
 
 /* Register user */ 
 exports.register = async (req, res) => {
-    const { name, email, password, confirmpassword } = req.body;
-
-    // Validations
-    if (!name) {
-        return res.status(422).json({ msg: "The name is required" });
-    }
-    if (!email) {
-        return res.status(422).json({ msg: "The email is required" });
-    }
-    if (!password) {
-        return res.status(422).json({ msg: "The password is required" });
-    }
-    if (password !== confirmpassword) {
-        return res.status(422).json({ msg: "The passwords do not match" });
-    }
+    const { name, email, password } = req.body;
 
     // Check if user exists
     const userExists = await User.findOne({ email: email });
@@ -48,14 +34,6 @@ exports.register = async (req, res) => {
 /* Login user */
 exports.login = async (req, res) => {
     const { email, password } = req.body;
-
-    // Validations
-    if (!email) {
-        return res.status(422).json({ msg: "The email is required" });
-    }
-    if (!password) {
-        return res.status(422).json({ msg: "The password is required" });
-    }
 
     // Check if user exists
     const user = await User.findOne({ email: email });
