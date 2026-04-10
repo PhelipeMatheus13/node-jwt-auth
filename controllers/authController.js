@@ -77,6 +77,8 @@ exports.refreshToken = async (req, res) => {
     }
 };
 
+
+
 exports.logout = async (req, res) => {
     const { refreshToken } = req.body;
 
@@ -85,10 +87,14 @@ exports.logout = async (req, res) => {
     }
 
     try {
+        // Checks if the token is valid (throws an error if it is not)
+        const decoded = await tokenService.verifyRefreshToken(refreshToken);
+        const userId = decoded.id;
+
         await tokenService.revokeRefreshToken(refreshToken);
+
         return res.status(200).json({ msg: "Logged out successfully" });
     } catch (err) {
-        console.error(err);
-        return res.status(500).json({ msg: "Server error during logout" });
+        return res.status(400).json({ msg: err.message });
     }
 };
