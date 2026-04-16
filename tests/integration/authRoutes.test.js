@@ -1,27 +1,31 @@
 const request = require("supertest");
-const mongoose = require("mongoose");
-const { MongoMemoryServer } = require("mongodb-memory-server");
-const User = require("../../models/User");
 const authService = require("../../services/authService");
 const app = require("../../app"); 
+const { setupTestDatabase } = require("../helpers/testDatabase");
+const { setKnexInstance } = require("../../config/database");
 
-let mongoServer;
-
-beforeAll(async () => {
-    mongoServer = await MongoMemoryServer.create();
-    await mongoose.connect(mongoServer.getUri());
-});
-
-afterAll(async () => {
-    await mongoose.disconnect();
-    await mongoServer.stop();
-});
 
 describe("Auth Routes", () => {
-    // Clears the database before each test 
-    beforeEach(async () => {
-        await User.deleteMany({});
+    let db;
+    let knex;
+
+    beforeAll(async () => {
+        db = await setupTestDatabase({
+        migrationDirectory: "./database/migrations",
+        });
+        knex = db.knex;
+        setKnexInstance(knex);
     });
+
+    afterAll(async () => {
+        await db.stop();
+    });
+
+    beforeEach(async () => {
+        await knex("refresh_tokens").del();
+        await knex("users").del();
+    });
+
 
     describe("POST /auth/register", () => {
         it("should register a new user successfully", async () => {
@@ -37,7 +41,7 @@ describe("Auth Routes", () => {
             expect(resp.statusCode).toBe(201);
             expect(resp.body.msg).toBe("User created successfully");
             // verify that the user is actually in the database
-            const user = await User.findOne({ email: "johndoe@example.com" });
+            const user = await knex("users").where({ email: "johndoe@example.com" }).first();
             expect(user).toBeTruthy();
             expect(user.name).toBe("John Doe");
             expect(user.email).toBe("johndoe@example.com");
@@ -141,7 +145,7 @@ describe("Auth Routes", () => {
         let refreshToken;
 
         beforeEach(async () => {
-            // Register and log in to obtain a valid refresh token. (create new at each iteration "it")
+
             await request(app)
                 .post("/auth/register")
                 .send({

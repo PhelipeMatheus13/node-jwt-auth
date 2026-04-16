@@ -1,42 +1,47 @@
 const request = require("supertest");
-const mongoose = require("mongoose");
-const { MongoMemoryServer } = require("mongodb-memory-server");
 const app = require("../../app");
-const User = require("../../models/User");
+const { setupTestDatabase } = require("../helpers/testDatabase");
+const { setKnexInstance } = require("../../config/database");
 const authService = require("../../services/authService");
 const tokenService = require("../../services/tokenService");
 
-let mongoServer;
-let accessToken;
-let userId;
-
-beforeAll(async () => {
-    mongoServer = await MongoMemoryServer.create();
-    await mongoose.connect(mongoServer.getUri());
-});
-
-afterAll(async () => {
-    await mongoose.disconnect();
-    await mongoServer.stop();
-});
 
 describe("User Routes", () => {
+    let db;
+    let knex;
+    let userId;
+    let accessToken;
+
+    beforeAll(async () => {
+        db = await setupTestDatabase({
+        migrationDirectory: "./database/migrations",
+        });
+        knex = db.knex;
+        setKnexInstance(knex);
+    });
+
+    afterAll(async () => {
+        await db.stop();
+    });
+
     beforeEach(async () => {
-        // Clear users and tokens before each test
-        await User.deleteMany({});
-        
-        // Create a user for the tests
+        await knex("refresh_tokens").del();
+        await knex("users").del();
+
+        // create a test user in the database
         const hashedPassword = await authService.hashPassword("userpass123");
-        const user = await User.create({
+        const [user] = await knex("users")
+        .insert({
             name: "Test User",
             email: "test@example.com",
-            password: hashedPassword
-        });
-        userId = user._id.toString();
+            password: hashedPassword,
+        })
+        .returning("*");
+        userId = user.id;
 
-        // Generates a valid access token for this user
         accessToken = tokenService.generateAccessToken(userId);
     });
+
 
     describe("GET /users/:id", () => {
         it("should return user data when valid token is provided", async () => {
@@ -45,7 +50,7 @@ describe("User Routes", () => {
                 .set("Authorization", `Bearer ${accessToken}`);
 
             expect(res.statusCode).toBe(200);
-            expect(res.body).toHaveProperty("_id", userId);
+            expect(res.body).toHaveProperty("id", userId);
             expect(res.body).toHaveProperty("name", "Test User");
             expect(res.body).toHaveProperty("email", "test@example.com");
             expect(res.body).not.toHaveProperty("password"); // The password should not be returned
@@ -82,7 +87,7 @@ describe("User Routes", () => {
         });
 
         it("should return 404 if user does not exist", async () => {
-            const nonExistentId = new mongoose.Types.ObjectId().toString();
+            const nonExistentId = "00000000-0000-0000-0000-000000000000"; // Assuming this ID does not exist in the database
             const res = await request(app)
                 .get(`/users/${nonExistentId}`)
                 .set("Authorization", `Bearer ${accessToken}`);
