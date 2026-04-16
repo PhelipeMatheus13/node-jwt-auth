@@ -6,18 +6,20 @@ exports.register = async (req, res) => {
     const { name, email, password } = req.body;
 
     try {
-        const existingUser = await authService.findUserByEmail(email);
-        if (existingUser) {
+        const exists = await authService.emailExists(email);
+        if (exists) {
             return res.status(422).json({ msg: "Email already in use, please choose another" });
         }
 
         // Hash the password before saving the user
         const hashedPassword = await authService.hashPassword(password);
-        const newUser = await authService.createUser({
-            name,
-            email,
+        
+        await authService.createUser({
+            name: name,
+            email: email,
             password: hashedPassword
         });
+
 
         return res.status(201).json({ msg: "User created successfully" });
     } catch (err) {
@@ -42,8 +44,8 @@ exports.login = async (req, res) => {
         }
 
         // generate access and refresh tokens
-        const accessToken = await tokenService.generateAccessToken(user._id);
-        const refreshToken = await tokenService.generateRefreshToken(user._id);
+        const accessToken = tokenService.generateAccessToken(user.id);
+        const refreshToken = await tokenService.generateRefreshToken(user.id);
 
         return res.status(200).json({
             msg: "Login successful",
@@ -65,7 +67,7 @@ exports.refreshToken = async (req, res) => {
 
     try {
         const decoded = await tokenService.verifyRefreshToken(refreshToken);
-        const userId = decoded.id;
+        const userId = decoded.id; 
 
         // generate a new access token
         const newAccessToken = tokenService.generateAccessToken(userId);

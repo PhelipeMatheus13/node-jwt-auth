@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const RefreshToken = require("../models/RefreshToken");
+const tokenRepository = require("../repositories/tokenRepository");
 
 // Generate access token; this token will be used for authentication and will have a short expiration time
 const generateAccessToken = (userId) => {
@@ -15,8 +15,10 @@ const generateRefreshToken = async (userId) => {
     const decoded = jwt.decode(refreshToken);
     const expiresAt = new Date(decoded.exp * 1000);
 
+    // TODO: hash the refresh token before saving it in the database for added security
+
     // Save the refresh token in the database
-    await RefreshToken.create({
+    await tokenRepository.create({
         token: refreshToken,
         userId,
         expiresAt
@@ -32,23 +34,19 @@ const verifyRefreshToken = async (token) => {
         const decoded = jwt.verify(token, secret);
 
         // Check if exists 
-        const storedToken = await RefreshToken.findOne({ token });
-        if (!storedToken) {
+        const exists = await tokenRepository.existsByToken(token);
+        if (!exists) {
             throw new Error("Token not found or revoked");
         }
 
-        return decoded; // { id, iat, exp } id is the userId, iat is the issued at time, exp is the expiration time
+        return decoded; // { id, iat, exp } 
     } catch (err) {
         throw new Error("Invalid or expired refresh token");
     }
 };
 
 // logout user; this function will be used to revoke the refresh token, removing it from the database
-const revokeRefreshToken = async (token) => {
-    await RefreshToken.deleteOne({ token });
-};
-
-
+const revokeRefreshToken = (token) => tokenRepository.deleteByToken(token);
 
 module.exports = {
     generateAccessToken,
