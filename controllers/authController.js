@@ -1,51 +1,38 @@
 const authService = require("../services/authService");
-const tokenService = require("../services/tokenService");
+
+// TODO: Refactor to use custom error classes (e.g., ConflictError, ValidationError)
+// This will allow the controller to map errors to HTTP status codes cleanly.
 
 /* Register user */ 
 exports.register = async (req, res) => {
     const { name, email, password } = req.body;
 
     try {
-        const exists = await authService.emailExists(email);
-        if (exists) {
-            return res.status(422).json({ msg: "Email already in use, please choose another" });
-        }
-
-        // Hash the password before saving the user
-        const hashedPassword = await authService.hashPassword(password);
-        
-        await authService.createUser({
+        // ignore id returned by userRepository.createUser
+        await authService.registerUser({
             name: name,
             email: email,
-            password: hashedPassword
+            password: password
         });
-
 
         return res.status(201).json({ msg: "User created successfully" });
     } catch (err) {
         console.error(err);
-        return res.status(500).json({ msg: "Server error while creating user" });
+        
+        if (err.message === "ALREADY_EXISTS") {
+            return res.status(409).json({ msg: "Email already in use, please choose another"});
+        }
+
+        return res.status(500).json({ msg: "Internal server error" });
     }
 };
 
 /* Login user */
 exports.login = async (req, res) => {
     const { email, password } = req.body;
-
+    
     try {
-        const user = await authService.findUserByEmail(email);
-        if (!user) {
-            return res.status(404).json({ msg: "User not found" });
-        }
-
-        const passwordMatch = await authService.comparePassword(password, user.password);
-        if (!passwordMatch) {
-            return res.status(422).json({ msg: "Invalid password" });
-        }
-
-        // generate access and refresh tokens
-        const accessToken = tokenService.generateAccessToken(user.id);
-        const refreshToken = await tokenService.generateRefreshToken(user.id);
+        const { accessToken, refreshToken } = await authService.login(email, password);
 
         return res.status(200).json({
             msg: "Login successful",
@@ -54,7 +41,12 @@ exports.login = async (req, res) => {
         });
     } catch (err) {
         console.error(err);
-        return res.status(500).json({ msg: "Server error during login" });
+        
+        if (err.message === "INVALID") {
+            return res.status(401).json({ msg: "Invalid email or password"});
+        }
+
+        return res.status(500).json({ msg: "Internal server error" });
     }
 };
 
@@ -66,16 +58,17 @@ exports.refreshToken = async (req, res) => {
     }
 
     try {
-        const decoded = await tokenService.verifyRefreshToken(refreshToken);
-        const userId = decoded.id; 
-
-        // generate a new access token
-        const newAccessToken = tokenService.generateAccessToken(userId);
+        const newAccessToken = await authService.refreshAccessToken(refreshToken);
 
         return res.status(200).json({ accessToken: newAccessToken });
     } catch (err) {
         console.error(err);
-        return res.status(403).json({ msg: err.message });
+        
+        if (err.message === "INVALID") {
+            return res.status(401).json({ msg: "Invalid or expired token, please login again"});
+        }
+
+        return res.status(500).json({ msg: "Internal server error" });
     }
 };
 
@@ -85,18 +78,18 @@ exports.logout = async (req, res) => {
     const { refreshToken } = req.body;
 
     if (!refreshToken) {
-        return res.status(400).json({ msg: "Refresh token is required" });
+        return res.status(401).json({ msg: "Refresh token is required" });
     }
 
     try {
-        // Checks if the token is valid (throws an error if it is not)
-        const decoded = await tokenService.verifyRefreshToken(refreshToken);
-        const userId = decoded.id;
-
-        await tokenService.revokeRefreshToken(refreshToken);
+        await authService.logout(refreshToken);
 
         return res.status(200).json({ msg: "Logged out successfully" });
     } catch (err) {
-        return res.status(400).json({ msg: err.message });
+        if (err.message === "NOT_FOUND") {
+            return res.status(404).json({ msg: "Refresh token not found or revoked"});
+        }
+
+        return res.status(500).json({ msg: "Internal server error" });
     }
 };
