@@ -32,7 +32,7 @@ A simple and secure authentication API built with Node.js, Express, and PostgreS
 
 Start the PostgreSQL container
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 Run migrations 
 ```bash
@@ -44,7 +44,7 @@ npm start
 ```
 Stop the database when done
 ```bash
-docker-compose down
+docker compose down
 ```
 
 ## Installation

@@ -1,30 +1,84 @@
-const bcrypt = require("bcrypt");
-const userRepository = require("../repositories/userRepository")
+const hashService = require("./auth/hashService");
+const jwtService = require("./auth/jwtService");
+const userService = require("./userService");
+const tokenService = require("./tokenService");
 
+const registerUser = async (data) => {
+    const exists = await userService.emailExists(data.email);
+    if (exists) {
+        throw new Error("ALREADY_EXISTS");
+    }
 
-const hashPassword = async (password) => {
-    const salt = await bcrypt.genSalt(12);
-    return await bcrypt.hash(password, salt);
+    // Hash the password before saving the user
+    const hashedPassword = await hashService.hashPassword(data.password);
+
+    return userService.createUser({
+        ...data,
+        password: hashedPassword
+    });
 };
 
-const comparePassword = async (password, hashedPassword) => {
-    return await bcrypt.compare(password, hashedPassword);
+const login = async (email, password) => {
+    // Find user by email, including password hash for validation
+    const user = await userService.findUserByEmailWithPassword(email);
+ 
+    // For security reasons, any errors will be treated as invalid here
+    if (!user || !(await hashService.comparePassword(password, user.password))) {
+        throw new Error("INVALID");
+    }
+
+    const accessToken = jwtService.generateAccessToken(user.id);
+    const refreshToken = jwtService.generateRefreshToken(user.id);
+    const decoded = jwtService.decodeRefreshToken(refreshToken);
+
+    await tokenService.saveRefreshToken({
+        token: refreshToken,
+        userId: user.id,
+        expiresAt: new Date(decoded.exp * 1000) 
+    });
+
+    return {
+        accessToken,
+        refreshToken
+    };
 };
 
-const findUserByEmail = (email) => userRepository.findByEmail(email);
 
-const findUserById = (id) => userRepository.findById(id);
+const refreshAccessToken = async (refreshToken) => {
+    let decoded;
+    try {
+        decoded = jwtService.decodeRefreshToken(refreshToken);
+    } catch (err) {
+        throw err;   
+    }
 
-const createUser = (userData) => userRepository.create(userData);
+    const exists = await tokenService.refreshTokenExists(refreshToken);
+    if (!exists) {
+        throw new Error("Refresh token not found or revoked");
+    }
 
-const emailExists = (email) => userRepository.existsByEmail(email);
+    return jwtService.generateAccessToken(decoded.id);
+};
 
+
+const logout = async (refreshToken) => {
+    try {
+        jwtService.decodeRefreshToken(refreshToken);
+    } catch (err) {
+        throw err;
+    }
+
+    const exists = await tokenService.refreshTokenExists(refreshToken);
+    if (!exists) {
+        throw new Error("NOT_FOUND");
+    }
+
+    return await tokenService.revokeRefreshToken(refreshToken);
+};
 
 module.exports = {
-    hashPassword,
-    comparePassword,
-    findUserById,
-    findUserByEmail,
-    createUser,
-    emailExists
+    registerUser,
+    login,
+    refreshAccessToken,
+    logout,
 };
