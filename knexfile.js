@@ -1,3 +1,3 @@
 // proxy
-const { config } = require("./config/database");
+const { config } = require("./src/shared/config/database");
 module.exports = config;
