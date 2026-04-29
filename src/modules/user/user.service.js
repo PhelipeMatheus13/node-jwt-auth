@@ -1,8 +1,21 @@
 const userRepository = require("./user.repository");
+const hashService = require("../../shared/services/hash.service")
 
-const emailExists = (email) => userRepository.existsByEmail(email);
 
-const createUser = (data) => userRepository.create(data);
+const createUser = async (data) => {
+    const exists = await userRepository.existsByEmail(data.email);
+    if (exists) {
+        throw new Error("ALREADY_EXISTS");
+    }
+
+    // Hash the password before saving the user
+    const hashedPassword = await hashService.hash(data.password);
+
+    return userRepository.create({
+        ...data,
+        password: hashedPassword
+    });
+};
 
 // internal  function for security: do not return the password hash
 const removeSensitiveFields = (user) => {
@@ -20,7 +33,6 @@ const findUserById = async (id) => {
 const findUserByEmailWithPassword = (email) => userRepository.findByEmail(email);
 
 module.exports =  {
-    emailExists,
     createUser,
     findUserById,
     findUserByEmailWithPassword,

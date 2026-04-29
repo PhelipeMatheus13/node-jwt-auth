@@ -1,29 +1,15 @@
-const hashService = require("./hash.service");
+const hashService = require("../../../shared/services/hash.service");
 const jwtService = require("./jwt.service");
 const userService = require("../../user/user.service");
 const tokenService = require("../../token/token.service");
 
-const registerUser = async (data) => {
-    const exists = await userService.emailExists(data.email);
-    if (exists) {
-        throw new Error("ALREADY_EXISTS");
-    }
-
-    // Hash the password before saving the user
-    const hashedPassword = await hashService.hashPassword(data.password);
-
-    return userService.createUser({
-        ...data,
-        password: hashedPassword
-    });
-};
 
 const login = async (email, password) => {
     // Find user by email, including password hash for validation
     const user = await userService.findUserByEmailWithPassword(email);
  
     // For security reasons, any errors will be treated as invalid here
-    if (!user || !(await hashService.comparePassword(password, user.password))) {
+    if (!user || !(await hashService.compare(password, user.password))) {
         throw new Error("INVALID");
     }
 
@@ -77,7 +63,6 @@ const logout = async (refreshToken) => {
 };
 
 module.exports = {
-    registerUser,
     login,
     refreshAccessToken,
     logout,

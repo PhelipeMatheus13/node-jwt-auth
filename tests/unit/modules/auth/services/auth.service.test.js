@@ -1,11 +1,11 @@
 const authService = require("../../../../../src/modules/auth/services/auth.service");
 
-jest.mock("../../../../../src/modules/auth/services/hash.service");
+jest.mock("../../../../../src/shared/services/hash.service");
 jest.mock("../../../../../src/modules/user/user.service"); 
 jest.mock("../../../../../src/modules/auth/services/jwt.service");
 jest.mock("../../../../../src/modules/token/token.service");
 
-const hashService = require("../../../../../src/modules/auth/services/hash.service");
+const hashService = require("../../../../../src/shared/services/hash.service");
 const userService = require("../../../../../src/modules/user/user.service");
 const jwtService = require("../../../../../src/modules/auth/services/jwt.service");
 const tokenService = require("../../../../../src/modules/token/token.service");
@@ -14,49 +14,6 @@ const tokenService = require("../../../../../src/modules/token/token.service");
 describe("Auth Service", () => {
     beforeEach(() => {
         jest.clearAllMocks();
-    });
-
-    describe("registerUser", () => {
-        it("should throw if fail in email check ", async () => {
-            userService.emailExists.mockRejectedValue(new Error("fake error"));
-
-            await expect(authService.registerUser({ email: "test@example.com", password: "testPassword@123" }))
-                .rejects.toThrow("fake error");
-        });
-
-        it("should throw if email already exists ", async () => {
-            userService.emailExists.mockResolvedValue(true);
-
-            await expect(authService.registerUser({ email: "test@example.com", password: "testPassword@123" }))
-                .rejects.toThrow("ALREADY_EXISTS");
-        });
-
-        it("should throw if fail in user creation", async () => {
-            userService.emailExists.mockResolvedValue(false);
-            hashService.hashPassword.mockResolvedValue("hashedPassword");
-            userService.createUser.mockRejectedValue(new Error("fake error"));
-
-            await expect(authService.registerUser({ email: "test@example.com", password: "testPassword@123" }))
-                .rejects.toThrow("fake error");
-        });
-
-        it("should create user successfully", async () => {
-            userService.emailExists.mockResolvedValue(false);
-            hashService.hashPassword.mockResolvedValue("hashedPassword");
-            userService.createUser.mockResolvedValue("uuid-123");
-
-            const data = { name: "Test", email: "test@example.com", password: "testPassword@123" };
-            const result = await authService.registerUser(data);
-
-            expect(hashService.hashPassword).toHaveBeenCalledWith("testPassword@123");
-            expect(userService.createUser).toHaveBeenCalledWith({
-                name: "Test",
-                email: "test@example.com",
-                password: "hashedPassword",
-            });
-
-            expect(result).toBe("uuid-123");
-        });
     });
 
     describe("login", () => {
@@ -80,7 +37,7 @@ describe("Auth Service", () => {
 
         it("should throw if password does not match", async () => {
             userService.findUserByEmailWithPassword.mockResolvedValue(userData);
-            hashService.comparePassword.mockResolvedValue(false);
+            hashService.compare.mockResolvedValue(false);
 
             await expect(authService.login({ email: "test@example.com", password: "wrongPassword" }))
                 .rejects.toThrow("INVALID");
@@ -88,7 +45,7 @@ describe("Auth Service", () => {
 
         it("should throw if fail in save refresh token", async () => {
             userService.findUserByEmailWithPassword.mockResolvedValue(userData);
-            hashService.comparePassword.mockResolvedValue(true);
+            hashService.compare.mockResolvedValue(true);
             jwtService.generateAccessToken.mockReturnValue("access-token");
             jwtService.generateRefreshToken.mockReturnValue("refresh-token");
             jwtService.decodeRefreshToken.mockReturnValue(decodedToken);
@@ -100,7 +57,7 @@ describe("Auth Service", () => {
         
         it("should login successfully", async () => {
             userService.findUserByEmailWithPassword.mockResolvedValue(userData);
-            hashService.comparePassword.mockResolvedValue(true);
+            hashService.compare.mockResolvedValue(true);
             jwtService.generateAccessToken.mockReturnValue("access-token");
             jwtService.generateRefreshToken.mockReturnValue("refresh-token");
             jwtService.decodeRefreshToken.mockReturnValue(decodedToken);

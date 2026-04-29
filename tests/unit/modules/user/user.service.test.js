@@ -1,48 +1,59 @@
 const userService = require("../../../../src/modules/user/user.service");
 
 jest.mock("../../../../src/modules/user/user.repository");
+jest.mock("../../../../src/shared/services/hash.service");
 const userRepository = require("../../../../src/modules/user/user.repository");
+const hashService = require("../../../../src/shared/services/hash.service");
+
 
 describe("User Service (Unit)", () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
 
-    describe("emailExists", () => {
-        const email = "test@example.com"
-        it("should throw an error if repository.existsByEmail fails", async () => {
+    describe("createUser", () => {
+        it("should throw if fail in email check ", async () => {
             userRepository.existsByEmail.mockRejectedValue(new Error("fake error"));
 
-            await expect(userService.emailExists(email))
+            await expect(userService.createUser({ email: "test@example.com", password: "testPassword@123" }))
                 .rejects.toThrow("fake error");
         });
 
-        it("should return true if repository returns true", async () => {
+        it("should throw if email already exists ", async () => {
             userRepository.existsByEmail.mockResolvedValue(true);
 
-            const result = await userService.emailExists(email);
-            expect(result).toBe(true);
+            await expect(userService.createUser({ email: "test@example.com", password: "testPassword@123" }))
+                .rejects.toThrow("ALREADY_EXISTS");
         });
-    });
 
-    describe("createUser", () => {
-        const userData = { name: "Test", email: "test@example.com", password: "hashed" };
-        it("should throw an error if repository.create fails", async () => {
+        it("should throw if fail in user creation", async () => {
+            userRepository.existsByEmail.mockResolvedValue(false);
+            hashService.hash.mockResolvedValue("hashedPassword");
             userRepository.create.mockRejectedValue(new Error("fake error"));
 
-            await expect(userService.createUser(userData))
+            await expect(userService.createUser({ email: "test@example.com", password: "testPassword@123" }))
                 .rejects.toThrow("fake error");
         });
 
-        it("should call repository.create", async () => {
+        it("should create user successfully", async () => {
+            userRepository.existsByEmail.mockResolvedValue(false);
+            hashService.hash.mockResolvedValue("hashedPassword");
             userRepository.create.mockResolvedValue("uuid-123");
 
-            const result = await userService.createUser(userData);
-            
-            expect(userRepository.create).toHaveBeenCalledWith(userData);
+            const data = { name: "Test", email: "test@example.com", password: "testPassword@123" };
+            const result = await userService.createUser(data);
+
+            expect(hashService.hash).toHaveBeenCalledWith("testPassword@123");
+            expect(userRepository.create).toHaveBeenCalledWith({
+                name: "Test",
+                email: "test@example.com",
+                password: "hashedPassword",
+            });
+
             expect(result).toBe("uuid-123");
         });
     });
+
 
     describe("findUserById", () => {
         const userId = "uuid-123";

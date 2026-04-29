@@ -2,6 +2,7 @@ const request = require("supertest");
 const app = require("../../../../src/app");
 const { setupTestDatabase } = require("../../../helpers/testDatabase");
 const { setKnexInstance } = require("../../../../src/shared/config/database");
+const hashService = require("../../../../src/shared/services/hash.service");
 
 describe("Auth Routes (Integration)", () => {
     let db, knex;
@@ -21,46 +22,15 @@ describe("Auth Routes (Integration)", () => {
         await knex("users").del();
     });
 
-    describe("POST /auth/register", () => {
-        const validUser = {
-            name: "John Doe",
-            email: "john@example.com",
-            password: "Pass@123",
-            confirmPassword: "Pass@123"
-        };
-
-        it("should register a new user successfully", async () => {
-            const res = await request(app)
-                .post("/auth/register")
-                .send(validUser);
-
-            expect(res.statusCode).toBe(201);
-            expect(res.body.msg).toBe("User created successfully");
-
-            const user = await knex("users").where({ email: validUser.email }).first();
-            expect(user).toBeTruthy();
-            expect(user.name).toBe(validUser.name);
-        });
-
-        it("should return 422 if validation fails (e.g., short password)", async () => {
-            const invalidUser = { ...validUser, password: "123" };
-            const res = await request(app)
-                .post("/auth/register")
-                .send(invalidUser);
-
-            expect(res.statusCode).toBe(422);
-            expect(res.body.errors).toBeDefined();
-            expect(res.body.errors[0].msg).toMatch(/at least 6 characters/);
-        });
-    });
-
     describe("POST /auth/login", () => {
         beforeEach(async () => {
-            await request(app).post("/auth/register").send({
-                name: "Login Test",
+            const password = "Pass@123";
+            const passwordHashed = await hashService.hash(password);
+
+            await knex("users").insert({
+                name: "teste login",
                 email: "login@example.com",
-                password: "Pass@123",
-                confirmPassword: "Pass@123"
+                password: passwordHashed
             });
         });
 
@@ -88,11 +58,13 @@ describe("Auth Routes (Integration)", () => {
         let refreshToken;
 
         beforeEach(async () => {
-            await request(app).post("/auth/register").send({
-                name: "Refresh Test",
+            const password = "Pass@123";
+            const passwordHashed = await hashService.hash(password);
+
+            await knex("users").insert({
+                name: "teste refresh token",
                 email: "refresh@example.com",
-                password: "Pass@123",
-                confirmPassword: "Pass@123"
+                password: passwordHashed
             });
 
             const loginRes = await request(app)
@@ -116,11 +88,13 @@ describe("Auth Routes (Integration)", () => {
         let refreshToken;
 
         beforeEach(async () => {
-            await request(app).post("/auth/register").send({
-                name: "Logout Test",
+            const password = "Pass@123";
+            const passwordHashed = await hashService.hash(password);
+
+            await knex("users").insert({
+                name: "teste logout",
                 email: "logout@example.com",
-                password: "Pass@123",
-                confirmPassword: "Pass@123"
+                password: passwordHashed
             });
 
             const loginRes = await request(app)

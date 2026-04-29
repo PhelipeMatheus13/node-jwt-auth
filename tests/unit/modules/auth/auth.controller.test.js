@@ -16,44 +16,6 @@ describe("Auth Controller (Unit)", () => {
         jest.clearAllMocks();
     });
 
-    describe("register", () => {
-        const body = { 
-            name: "Test", 
-            email: "test@example.com", 
-            password: "myPassword@123", 
-            confirmpassword: "myPassword@123" 
-        };
-
-        it("should return 201 on successful registration", async () => {
-            req.body = body;
-            authService.registerUser.mockResolvedValue("uuid-123");
-
-            await authController.register(req, res);
-
-            expect(res.status).toHaveBeenCalledWith(201);
-            expect(res.json).toHaveBeenCalledWith({ msg: "User created successfully" });
-        });
-
-        it("should return 409 if email already exists", async () => {
-            req.body = body;
-            authService.registerUser.mockRejectedValue(new Error("ALREADY_EXISTS"));
-
-            await authController.register(req, res);
-
-            expect(res.status).toHaveBeenCalledWith(409);
-            expect(res.json).toHaveBeenCalledWith({ msg: "Email already in use, please choose another" });
-        });
-
-        it("should return 500 on unexpected error", async () => {
-            req.body = body;
-            authService.registerUser.mockRejectedValue(new Error("DB error"));
-
-            await authController.register(req, res);
-
-            expect(res.status).toHaveBeenCalledWith(500);
-            expect(res.json).toHaveBeenCalledWith({ msg: "Internal server error" });
-        });
-    });
 
     describe("login", () => {
         const body = {
@@ -181,7 +143,7 @@ describe("Auth Controller (Unit)", () => {
             req.body = body;
             authService.logout.mockRejectedValue(new Error("fake error"));
 
-            await authController.refreshToken(req, res);
+            await authController.logout(req, res);
 
             expect(res.status).toHaveBeenCalledWith(500);
             expect(res.json).toHaveBeenCalledWith({ msg: "Internal server error" });

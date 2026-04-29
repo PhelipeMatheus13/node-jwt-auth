@@ -16,6 +16,46 @@ describe("User Controller (Unit)", () => {
         jest.clearAllMocks();
     });
 
+    describe("register", () => {
+        const body = { 
+            name: "Test", 
+            email: "test@example.com", 
+            password: "myPassword@123", 
+            confirmpassword: "myPassword@123" 
+        };
+
+        it("should return 201 on successful registration", async () => {
+            req.body = body;
+            userService.createUser.mockResolvedValue("uuid-123");
+
+            await userController.register(req, res);
+
+            expect(res.status).toHaveBeenCalledWith(201);
+            expect(res.json).toHaveBeenCalledWith({ msg: "User created successfully" });
+        });
+
+        it("should return 409 if email already exists", async () => {
+            req.body = body;
+            userService.createUser.mockRejectedValue(new Error("ALREADY_EXISTS"));
+
+            await userController.register(req, res);
+
+            expect(res.status).toHaveBeenCalledWith(409);
+            expect(res.json).toHaveBeenCalledWith({ msg: "Email already in use, please choose another" });
+        });
+
+        it("should return 500 on unexpected error", async () => {
+            req.body = body;
+            userService.createUser.mockRejectedValue(new Error("DB error"));
+
+            await userController.register(req, res);
+
+            expect(res.status).toHaveBeenCalledWith(500);
+            expect(res.json).toHaveBeenCalledWith({ msg: "Internal server error" });
+        });
+    });
+    
+
     describe("getUser", () => {
         it("should return 400 if id is missing", async () => {
             await userController.getUser(req, res);

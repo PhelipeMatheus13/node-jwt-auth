@@ -3,29 +3,6 @@ const authService = require("./services/auth.service");
 // TODO: Refactor to use custom error classes (e.g., ConflictError, ValidationError)
 // This will allow the controller to map errors to HTTP status codes cleanly.
 
-/* Register user */ 
-exports.register = async (req, res) => {
-    const { name, email, password } = req.body;
-
-    try {
-        // ignore id returned by userRepository.createUser
-        await authService.registerUser({
-            name: name,
-            email: email,
-            password: password
-        });
-
-        return res.status(201).json({ msg: "User created successfully" });
-    } catch (err) {
-        console.error(err);
-        
-        if (err.message === "ALREADY_EXISTS") {
-            return res.status(409).json({ msg: "Email already in use, please choose another"});
-        }
-
-        return res.status(500).json({ msg: "Internal server error" });
-    }
-};
 
 /* Login user */
 exports.login = async (req, res) => {

@@ -1,5 +1,27 @@
 const userService = require("./user.service");
 
+const register = async (req, res) => {
+    const { name, email, password } = req.body;
+
+    try {
+        // ignore id returned by userRepository.createUser
+        await userService.createUser({
+            name: name,
+            email: email,
+            password: password
+        });
+
+        return res.status(201).json({ msg: "User created successfully" });
+    } catch (err) {
+        console.error(err);
+        
+        if (err.message === "ALREADY_EXISTS") {
+            return res.status(409).json({ msg: "Email already in use, please choose another"});
+        }
+
+        return res.status(500).json({ msg: "Internal server error" });
+    }
+};
 
 // Private route, protected by authMiddleware
 const getUser = async (req, res) => {
@@ -22,5 +44,6 @@ const getUser = async (req, res) => {
 };
 
 module.exports = {
+    register,
     getUser,
 }

@@ -20,19 +20,55 @@ describe("User Routes (Integration)", () => {
     beforeEach(async () => {
         await knex("refresh_tokens").del();
         await knex("users").del();
+    });
 
-        const [user] = await knex("users").insert({
-            name: "Test User",
-            email: "test@example.com",
-            password: "hashedpass"
-        })
-        .returning("*");
+    describe("POST /users/register", () => {
+        const validUser = {
+            name: "John Doe",
+            email: "john@example.com",
+            password: "Pass@123",
+            confirmPassword: "Pass@123"
+        };
 
-        userId = user.id;
-        accessToken = jwtService.generateAccessToken(userId);
+        it("should register a new user successfully", async () => {
+            const res = await request(app)
+                .post("/users/register")
+                .send(validUser);
+
+            expect(res.statusCode).toBe(201);
+            expect(res.body.msg).toBe("User created successfully");
+
+            const user = await knex("users").where({ email: validUser.email }).first();
+            expect(user).toBeTruthy();
+            expect(user.name).toBe(validUser.name);
+        });
+
+        it("should return 422 if validation fails (e.g., short password)", async () => {
+            const invalidUser = { ...validUser, password: "123" };
+            const res = await request(app)
+                .post("/users/register")
+                .send(invalidUser);
+
+            expect(res.statusCode).toBe(422);
+            expect(res.body.errors).toBeDefined();
+            expect(res.body.errors[0].msg).toMatch(/at least 6 characters/);
+        });
     });
 
     describe("GET /users/:id", () => {
+        beforeEach(async () => {
+            const [user] = await knex("users")
+                .insert({
+                    name: "Test User",
+                    email: "test@example.com",
+                    password: "hashedpass"
+                })
+                .returning("*");
+
+            userId = user.id;
+            accessToken = jwtService.generateAccessToken(userId);
+        });
+
         it("should return user data with valid token", async () => {
             const res = await request(app)
                 .get(`/users/${userId}`)
