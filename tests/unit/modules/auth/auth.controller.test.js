@@ -95,6 +95,17 @@ describe("Auth Controller (Unit)", () => {
             expect(res.json).toHaveBeenCalledWith({ msg: "Invalid or expired token, please login again" });
         });
 
+
+        it("should return 404 if not found", async () => {
+            req.body = body;
+            authService.refreshAccessToken.mockRejectedValue(new Error("NOT_FOUND"))
+
+            await authController.refreshToken(req, res);
+
+            expect(res.status).toHaveBeenCalledWith(404);
+            expect(res.json).toHaveBeenCalledWith({ msg: "Refresh token not found or revoked, please login again" });
+        });
+
         it("should return 500 on unexpected error", async () => {
             req.body = body;
             authService.refreshAccessToken.mockRejectedValue(new Error("fake error"));

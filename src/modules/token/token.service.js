@@ -1,11 +1,11 @@
 const tokenRepository = require("./token.repository");
 
 const saveRefreshToken = (data) => tokenRepository.create(data);
-const refreshTokenExists = (token) => tokenRepository.existsByToken(token);
 const revokeRefreshToken = (token) => tokenRepository.deleteByToken(token);
+const listRefreshTokensByUserId = (userId) =>tokenRepository.listByUserId(userId);
 
 module.exports = {
     saveRefreshToken,
-    refreshTokenExists,
     revokeRefreshToken,
+    listRefreshTokensByUserId,
 };

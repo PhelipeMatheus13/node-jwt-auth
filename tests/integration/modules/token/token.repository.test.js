@@ -69,29 +69,31 @@ describe("Token Repository (Integration)", () => {
         });
     });
     
-    describe("existsByToken", () => {
-        it("should return true if a user with the given email exists", async () => {
-            const tokenData = {
-                token: "test-token-123",
-                userId: userId,
-                expiresAt: new Date(Date.now() + 86400000) 
-            }
+    describe("listByUserId", () => {
+        it("should return tokens ordered by created_at desc", async () => {
+            const now = Date.now();
+            const tokensData = [
+                {
+                    token: "test-token-123",
+                    user_id: userId,
+                    expires_at: new Date(now + 86400000),
+                    created_at: new Date(now - 10000) 
+                },
+                {
+                    token: "test-token-456",
+                    user_id: userId,
+                    expires_at: new Date(now + 86400000),
+                    created_at: new Date(now) 
+                }
+            ];
 
-            await knex("refresh_tokens")
-                .insert({
-                    token: tokenData.token,
-                    user_id: tokenData.userId,
-                    expires_at: tokenData.expiresAt
-                });
+            await knex("refresh_tokens").insert(tokensData);
 
-            const exists = await tokenRepository.existsByToken(tokenData.token);
+            const responseList = await tokenRepository.listByUserId(userId);
 
-            expect(exists).toBe(true);
-        });
-
-        it("should return false if a user with the given email does not exist", async () => {
-            const exists = await tokenRepository.existsByToken("nonExistent");
-            expect(exists).toBe(false);
+            expect(responseList).toHaveLength(2);
+            expect(responseList[0]).toEqual({token: "test-token-456"});
+            expect(responseList[1]).toEqual({token: "test-token-123"});
         });
     });
 });

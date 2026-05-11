@@ -16,9 +16,12 @@ const login = async (email, password) => {
     const accessToken = jwtService.generateAccessToken(user.id);
     const refreshToken = jwtService.generateRefreshToken(user.id);
     const decoded = jwtService.decodeRefreshToken(refreshToken);
+    
+    // hash refresh token before saving in database
+    const hashedToken = await hashService.hash(refreshToken);
 
     await tokenService.saveRefreshToken({
-        token: refreshToken,
+        token: hashedToken,
         userId: user.id,
         expiresAt: new Date(decoded.exp * 1000) 
     });
@@ -38,9 +41,23 @@ const refreshAccessToken = async (refreshToken) => {
         throw err;   
     }
 
-    const exists = await tokenService.refreshTokenExists(refreshToken);
-    if (!exists) {
-        throw new Error("Refresh token not found or revoked");
+    const userId = decoded.id;
+    const hashes = await tokenService.listRefreshTokensByUserId(userId);
+
+    if (!hashes.length) {
+        throw new Error("NOT_FOUND");
+    }
+
+    let match = false;
+    for (const record of hashes) {
+        if (await hashService.compare(refreshToken, record.token)) {
+            match = true;
+            break;
+        }
+    }
+
+    if (!match) {
+        throw new Error("NOT_FOUND");
     }
 
     return jwtService.generateAccessToken(decoded.id);
@@ -48,18 +65,33 @@ const refreshAccessToken = async (refreshToken) => {
 
 
 const logout = async (refreshToken) => {
+    let decoded;
     try {
-        jwtService.decodeRefreshToken(refreshToken);
+        decoded = jwtService.decodeRefreshToken(refreshToken);
     } catch (err) {
         throw err;
     }
 
-    const exists = await tokenService.refreshTokenExists(refreshToken);
-    if (!exists) {
+    const userId = decoded.id;
+    const hashes = await tokenService.listRefreshTokensByUserId(userId);
+
+    if (!hashes.length) {
         throw new Error("NOT_FOUND");
     }
 
-    return await tokenService.revokeRefreshToken(refreshToken);
+    let matchedHash = null;
+    for (const record of hashes) {
+        if (await hashService.compare(refreshToken, record.token)) {
+            matchedHash = record.token;
+            break;
+        }
+    }
+
+    if (!matchedHash) {
+        throw new Error("NOT_FOUND");
+    }
+
+    return await tokenService.revokeRefreshToken(matchedHash);
 };
 
 module.exports = {

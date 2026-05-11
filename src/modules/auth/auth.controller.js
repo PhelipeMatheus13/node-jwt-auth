@@ -45,6 +45,10 @@ exports.refreshToken = async (req, res) => {
             return res.status(401).json({ msg: "Invalid or expired token, please login again"});
         }
 
+        if (err.message === "NOT_FOUND") {
+            return res.status(404).json({ msg: "Refresh token not found or revoked, please login again"});
+        }
+
         return res.status(500).json({ msg: "Internal server error" });
     }
 };

@@ -22,21 +22,19 @@ const deleteByToken = async (token) => {
 };
 
 // Reader
-const existsByToken = async (token) => {
+const listByUserId = async (userId) => {
     const knex = getKnex();
-    const result = await knex("refresh_tokens")
-        .select("id")
-        .where({ token })
-        .first();
-
-    return !!result;
-};
-
+    return knex("refresh_tokens")
+        .select("token")
+        .where({ user_id: userId })
+        .where("expires_at", ">", knex.fn.now())
+        .orderBy("created_at", "desc");
+}
 
 module.exports = {
     // writer
     create,
     deleteByToken,
     // reader
-    existsByToken,
+    listByUserId,
 };

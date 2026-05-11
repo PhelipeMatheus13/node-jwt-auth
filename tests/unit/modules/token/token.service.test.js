@@ -24,20 +24,6 @@ describe("Token Service (Unit)", () => {
         });
     });
 
-    describe("refreshTokenExists", () => {
-        it("should throw an error if repository.existsByToken fails", async () => {
-            tokenRepository.existsByToken.mockRejectedValue(new Error("fake error"));
-
-            await expect(tokenService.refreshTokenExists("token")).rejects.toThrow("fake error");
-        });
-
-        it("should return true if token exists", async () => {
-            tokenRepository.existsByToken.mockResolvedValue(true);
-
-            const result = await tokenService.refreshTokenExists("token");
-            expect(result).toBe(true);
-        });
-    });
 
     describe("revokeRefreshToken", () => {
         it("should throw an error if repository.deleteByToken fails", async () => {
@@ -51,6 +37,28 @@ describe("Token Service (Unit)", () => {
 
             await tokenService.revokeRefreshToken("token");
             expect(tokenRepository.deleteByToken).toHaveBeenCalledWith("token");
+        });
+    });
+
+    describe("listRefreshTokensByUserId", () => {
+        it("should throw an error if repository.listByUserId fails", async () => {
+            tokenRepository.listByUserId.mockRejectedValue(new Error("fake error"));
+
+            await expect(tokenService.listRefreshTokensByUserId("token")).rejects.toThrow("fake error");
+        });
+
+        it("should call repository.listByUserId", async () => {
+            const tokensData = [
+                {token: "test-token-123"},
+                {token: "test-token-456"}
+            ];
+
+            tokenRepository.listByUserId.mockResolvedValue(tokensData);
+
+            const response = await tokenService.listRefreshTokensByUserId("token");
+
+            expect(tokenRepository.listByUserId).toHaveBeenCalledWith("token");
+            expect(response).toBe(tokensData)
         });
     });
 });
