@@ -46,7 +46,7 @@ exports.refreshToken = async (req, res) => {
         }
 
         if (err.message === "NOT_FOUND") {
-            return res.status(404).json({ msg: "Refresh token not found or revoked, please login again"});
+            return res.status(403).json({ msg: "The provided refresh token is invalid and cannot be used for this action"});
         }
 
         return res.status(500).json({ msg: "Internal server error" });
@@ -67,8 +67,38 @@ exports.logout = async (req, res) => {
 
         return res.status(200).json({ msg: "Logged out successfully" });
     } catch (err) {
+        if (err.message === "INVALID") {
+            return res.status(401).json({msg: "Invalid or expired refresh token"});
+        }
+
         if (err.message === "NOT_FOUND") {
-            return res.status(404).json({ msg: "Refresh token not found or revoked"});
+            return res.status(403).json({msg: "The provided refresh token is invalid and cannot be used for this action"});
+        }
+
+
+        return res.status(500).json({ msg: "Internal server error" });
+    }
+};
+
+
+exports.logoutAll = async (req, res) => {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+        return res.status(401).json({ msg: "Refresh token is required" });
+    }
+
+    try {
+        await authService.logoutAll(refreshToken);
+
+        return res.status(200).json({ msg: "Logged out successfully" });
+    } catch (err) {
+        if (err.message === "INVALID") {
+            return res.status(401).json({msg: "Invalid or expired refresh token"});
+        }
+
+        if (err.message === "NOT_FOUND") {
+            return res.status(403).json({ msg: "The provided refresh token is invalid and cannot be used for this action"});
         }
 
         return res.status(500).json({ msg: "Internal server error" });

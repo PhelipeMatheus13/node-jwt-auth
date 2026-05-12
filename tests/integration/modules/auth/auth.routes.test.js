@@ -116,4 +116,34 @@ describe("Auth Routes (Integration)", () => {
             expect(stored).toBeUndefined();
         });
     });
+
+    describe("POST /auth/logout-all", () => {
+        let refreshToken;
+
+        beforeEach(async () => {
+            const password = "Pass@123";
+            const passwordHashed = await hashService.hash(password);
+
+            await knex("users").insert({
+                name: "teste logout",
+                email: "logout@example.com",
+                password: passwordHashed
+            });
+
+            const loginRes = await request(app)
+                .post("/auth/login")
+                .send({ email: "logout@example.com", password: "Pass@123" });
+
+            refreshToken = loginRes.body.refreshToken;
+        });
+
+        it("should logoutAll successfully", async () => {
+            const res = await request(app)
+                .post("/auth/logout-all")
+                .send({ refreshToken });
+
+            expect(res.statusCode).toBe(200);
+            expect(res.body.msg).toBe("Logged out successfully");
+        });
+    });
 });

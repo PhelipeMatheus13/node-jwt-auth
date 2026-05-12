@@ -21,6 +21,13 @@ const deleteByToken = async (token) => {
         .del();
 };
 
+const deleteAllByUserId = async (userId) => {
+    const knex = getKnex();
+    return knex("refresh_tokens")
+        .where({user_id: userId})
+        .del();
+}
+
 // Reader
 const listByUserId = async (userId) => {
     const knex = getKnex();
@@ -35,6 +42,7 @@ module.exports = {
     // writer
     create,
     deleteByToken,
+    deleteAllByUserId,
     // reader
     listByUserId,
 };

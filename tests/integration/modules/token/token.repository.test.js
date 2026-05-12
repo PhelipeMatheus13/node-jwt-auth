@@ -69,6 +69,33 @@ describe("Token Repository (Integration)", () => {
         });
     });
     
+    describe("deleteAllByUserId", () => {
+        it("should remove all tokens", async () => {
+            const now = Date.now();
+            const tokensData = [
+                {
+                    token: "test-token-123",
+                    user_id: userId,
+                    expires_at: new Date(now + 86400000),
+                    created_at: new Date(now - 10000) 
+                },
+                {
+                    token: "test-token-456",
+                    user_id: userId,
+                    expires_at: new Date(now + 86400000),
+                    created_at: new Date(now) 
+                }
+            ];
+
+            await knex("refresh_tokens").insert(tokensData);
+
+            await tokenRepository.deleteAllByUserId(userId);
+
+            const response = await knex("refresh_tokens").where({ user_id: userId }).first();
+            expect(response).toBeUndefined();
+        });
+    }); 
+
     describe("listByUserId", () => {
         it("should return tokens ordered by created_at desc", async () => {
             const now = Date.now();

@@ -185,8 +185,8 @@ describe("Auth Service", () => {
                 {token: "hash-token-123"},
                 {token: "hash-token-456"}
             ]);
-            hashService.compare.mockResolvedValue(false);
-            hashService.compare.mockResolvedValue(false);
+            hashService.compare.mockResolvedValueOnce(false);
+            hashService.compare.mockResolvedValueOnce(false);
             
             await expect(authService.logout(refreshToken))
                 .rejects.toThrow("NOT_FOUND");
@@ -210,6 +210,70 @@ describe("Auth Service", () => {
             expect(hashService.compare).toHaveBeenCalledWith(refreshToken, "hash-token-123");
             expect(hashService.compare).toHaveBeenCalledWith(refreshToken, "hash-token-456");
             expect(tokenService.revokeRefreshToken).toHaveBeenCalledWith("hash-token-456");
+        });
+    });
+
+    describe("logoutAll", () => {
+        const refreshToken = "valid-refresh-token";
+        const decodedToken = { id: "uuid-123", exp: Math.floor(Date.now() / 1000) + (60 * 60) };
+
+        it("should throw error if fail to decode refresh token", async () => {
+            jwtService.decodeRefreshToken.mockImplementation(() => {
+                throw new Error("fake error");
+            });
+
+            await expect(authService.logoutAll(refreshToken))
+                .rejects.toThrow("fake error");
+        });
+
+        it("should throw error if fail in tokenService.listRefreshTokensByUserId", async () => {
+            jwtService.decodeRefreshToken.mockReturnValue(decodedToken);
+            tokenService.listRefreshTokensByUserId.mockRejectedValue(new Error("fake error"));
+
+            await expect(authService.logoutAll(refreshToken))
+                .rejects.toThrow("fake error");
+        });
+
+        it("should throw error if refresh token does not exist", async () => {
+            jwtService.decodeRefreshToken.mockReturnValue(decodedToken);
+            tokenService.listRefreshTokensByUserId.mockResolvedValue([]);
+
+            await expect(authService.logoutAll(refreshToken))
+                .rejects.toThrow("NOT_FOUND");
+        });
+
+
+        it("should throw error an error if no hash matches", async () => {
+            jwtService.decodeRefreshToken.mockReturnValue(decodedToken);
+            tokenService.listRefreshTokensByUserId.mockResolvedValue([
+                {token: "hash-token-123"},
+                {token: "hash-token-456"}
+            ]);
+            hashService.compare.mockResolvedValueOnce(false);
+            hashService.compare.mockResolvedValueOnce(false);
+            
+            await expect(authService.logoutAll(refreshToken))
+                .rejects.toThrow("NOT_FOUND");
+        });
+
+        it("should logoutAll successfully", async () => {
+            jwtService.decodeRefreshToken.mockReturnValue(decodedToken);
+            tokenService.listRefreshTokensByUserId.mockResolvedValue([
+                {token: "hash-token-123"},
+                {token: "hash-token-456"}
+            ]);
+            hashService.compare.mockResolvedValueOnce(false);
+            hashService.compare.mockResolvedValueOnce(true);
+            tokenService.revokeAllRefreshTokensByUserId.mockResolvedValue(2); // knex returns number of rows deleted
+
+            await expect(authService.logoutAll(refreshToken))
+                .resolves.toBe(2);
+
+            expect(jwtService.decodeRefreshToken).toHaveBeenCalledWith(refreshToken);
+            expect(tokenService.listRefreshTokensByUserId).toHaveBeenCalledWith(decodedToken.id);
+            expect(hashService.compare).toHaveBeenCalledWith(refreshToken, "hash-token-123");
+            expect(hashService.compare).toHaveBeenCalledWith(refreshToken, "hash-token-456");
+            expect(tokenService.revokeAllRefreshTokensByUserId).toHaveBeenCalledWith(decodedToken.id);
         });
     });
 });

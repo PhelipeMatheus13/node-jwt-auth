@@ -94,8 +94,39 @@ const logout = async (refreshToken) => {
     return await tokenService.revokeRefreshToken(matchedHash);
 };
 
+const logoutAll = async (refreshToken) => {
+    let decoded;
+    try {
+        decoded = jwtService.decodeRefreshToken(refreshToken);
+    } catch (err) {
+        throw err;
+    }
+
+    const userId = decoded.id;
+    const hashes = await tokenService.listRefreshTokensByUserId(userId);
+
+    if (!hashes.length) {
+        throw new Error("NOT_FOUND");
+    }
+
+    let match = false;
+    for (const record of hashes) {
+        if (await hashService.compare(refreshToken, record.token)) {
+            match = true;
+            break;
+        }
+    }
+
+    if (!match) {
+        throw new Error("NOT_FOUND");
+    }
+
+    return tokenService.revokeAllRefreshTokensByUserId(userId);
+};
+
 module.exports = {
     login,
     refreshAccessToken,
     logout,
+    logoutAll,
 };

@@ -40,6 +40,21 @@ describe("Token Service (Unit)", () => {
         });
     });
 
+    describe("revokeAllRefreshTokensByUserId", () => {
+        it("should throw an error if repository.deleteAllByUserId fails", async () => {
+            tokenRepository.deleteAllByUserId.mockRejectedValue(new Error("fake error"));
+
+            await expect(tokenService.revokeAllRefreshTokensByUserId("uuid-123")).rejects.toThrow("fake error");
+        });
+
+        it("should call repository.deleteAllByUserId", async () => {
+            tokenRepository.deleteAllByUserId.mockResolvedValue(1);
+
+            await tokenService.revokeAllRefreshTokensByUserId("uuid-123");
+            expect(tokenRepository.deleteAllByUserId).toHaveBeenCalledWith("uuid-123");
+        });
+    });
+
     describe("listRefreshTokensByUserId", () => {
         it("should throw an error if repository.listByUserId fails", async () => {
             tokenRepository.listByUserId.mockRejectedValue(new Error("fake error"));
