@@ -1,6 +1,6 @@
 require("dotenv").config();
 const express = require("express");
-const errorHandler = require("./shared/errors/error.middleware")
+const errorHandler = require("./shared/middlewares/error.middleware")
 
 // Import routes
 const authRoutes = require("./modules/auth/auth.routes");

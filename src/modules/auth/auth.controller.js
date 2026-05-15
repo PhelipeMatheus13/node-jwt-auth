@@ -1,106 +1,49 @@
+const asyncHandler = require("../../shared/utils/async.util");
 const authService = require("./services/auth.service");
+const { badRequest } = require("../../shared/errors/errors");
 
-// TODO: Refactor to use custom error classes (e.g., ConflictError, ValidationError)
-// This will allow the controller to map errors to HTTP status codes cleanly.
-
-
-/* Login user */
-exports.login = async (req, res) => {
+const login = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
-    
-    try {
-        const { accessToken, refreshToken } = await authService.login(email, password);
+    const { accessToken, refreshToken } = await authService.login(email, password);
+    res.status(200).json({
+        success: true,
+        data: { accessToken, refreshToken }
+    });
+});
 
-        return res.status(200).json({
-            msg: "Login successful",
-            accessToken,
-            refreshToken
-        });
-    } catch (err) {
-        console.error(err);
-        
-        if (err.message === "INVALID") {
-            return res.status(401).json({ msg: "Invalid email or password"});
-        }
-
-        return res.status(500).json({ msg: "Internal server error" });
-    }
-};
-
-exports.refreshToken = async (req, res) => {
+const refreshToken = asyncHandler(async (req, res) => {
     const { refreshToken } = req.body;
+    if (!refreshToken) throw badRequest({ message: "Refresh token is required" }); 
+    const accessToken = await authService.refreshAccessToken(refreshToken);
+    res.status(200).json({
+        success: true,
+        data: { accessToken }
+    });
+});
 
-    if (!refreshToken) {
-        return res.status(401).json({ msg: "Refresh token is required" });
-    }
-
-    try {
-        const newAccessToken = await authService.refreshAccessToken(refreshToken);
-
-        return res.status(200).json({ accessToken: newAccessToken });
-    } catch (err) {
-        console.error(err);
-        
-        if (err.message === "INVALID") {
-            return res.status(401).json({ msg: "Invalid or expired token, please login again"});
-        }
-
-        if (err.message === "NOT_FOUND") {
-            return res.status(403).json({ msg: "The provided refresh token is invalid and cannot be used for this action"});
-        }
-
-        return res.status(500).json({ msg: "Internal server error" });
-    }
-};
-
-
-
-exports.logout = async (req, res) => {
+const logout = asyncHandler(async (req, res) =>  {
     const { refreshToken } = req.body;
+    if (!refreshToken) throw badRequest({ message: "Refresh token is required" });
+    await authService.logout(refreshToken);
+    res.status(200).json({
+        success: true,
+        message: "Logged out successfully"
+    });
+});
 
-    if (!refreshToken) {
-        return res.status(401).json({ msg: "Refresh token is required" });
-    }
-
-    try {
-        await authService.logout(refreshToken);
-
-        return res.status(200).json({ msg: "Logged out successfully" });
-    } catch (err) {
-        if (err.message === "INVALID") {
-            return res.status(401).json({msg: "Invalid or expired refresh token"});
-        }
-
-        if (err.message === "NOT_FOUND") {
-            return res.status(403).json({msg: "The provided refresh token is invalid and cannot be used for this action"});
-        }
-
-
-        return res.status(500).json({ msg: "Internal server error" });
-    }
-};
-
-
-exports.logoutAll = async (req, res) => {
+const logoutAll = asyncHandler(async (req, res) => {
     const { refreshToken } = req.body;
+    if (!refreshToken) throw badRequest({ message: "Refresh token is required" });
+    await authService.logoutAll(refreshToken);
+    res.status(200).json({
+        success: true,
+        message: "Logged out from all devices"
+    });
+});
 
-    if (!refreshToken) {
-        return res.status(401).json({ msg: "Refresh token is required" });
-    }
-
-    try {
-        await authService.logoutAll(refreshToken);
-
-        return res.status(200).json({ msg: "Logged out successfully" });
-    } catch (err) {
-        if (err.message === "INVALID") {
-            return res.status(401).json({msg: "Invalid or expired refresh token"});
-        }
-
-        if (err.message === "NOT_FOUND") {
-            return res.status(403).json({ msg: "The provided refresh token is invalid and cannot be used for this action"});
-        }
-
-        return res.status(500).json({ msg: "Internal server error" });
-    }
+module.exports = {
+    login,
+    refreshToken,
+    logout,
+    logoutAll
 };

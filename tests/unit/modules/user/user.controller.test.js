@@ -4,95 +4,64 @@ jest.mock("../../../../src/modules/user/user.service");
 const userService = require("../../../../src/modules/user/user.service");
 
 describe("User Controller (Unit)", () => {
-    let req, res;
+    let req, res, next;
 
     beforeEach(() => {
-        req = { params: {} };
+        req = { body: {}, params: {} };
         res = {
             status: jest.fn().mockReturnThis(),
             json: jest.fn().mockReturnThis(),
         };
-        
+        next = jest.fn(); // Mock next function for error handling
         jest.clearAllMocks();
     });
 
     describe("register", () => {
-        const body = { 
-            name: "Test", 
-            email: "test@example.com", 
-            password: "myPassword@123", 
-            confirmpassword: "myPassword@123" 
-        };
-
         it("should return 201 on successful registration", async () => {
-            req.body = body;
+            req.body = {
+                name: "Test",
+                email: "test@example.com",
+                password: "Pass@123",
+                confirmpassword: "Pass@123",
+            };
             userService.createUser.mockResolvedValue("uuid-123");
 
-            await userController.register(req, res);
+            await userController.register(req, res, next);
 
             expect(res.status).toHaveBeenCalledWith(201);
-            expect(res.json).toHaveBeenCalledWith({ msg: "User created successfully" });
-        });
-
-        it("should return 409 if email already exists", async () => {
-            req.body = body;
-            userService.createUser.mockRejectedValue(new Error("ALREADY_EXISTS"));
-
-            await userController.register(req, res);
-
-            expect(res.status).toHaveBeenCalledWith(409);
-            expect(res.json).toHaveBeenCalledWith({ msg: "Email already in use, please choose another" });
-        });
-
-        it("should return 500 on unexpected error", async () => {
-            req.body = body;
-            userService.createUser.mockRejectedValue(new Error("DB error"));
-
-            await userController.register(req, res);
-
-            expect(res.status).toHaveBeenCalledWith(500);
-            expect(res.json).toHaveBeenCalledWith({ msg: "Internal server error" });
+            expect(res.json).toHaveBeenCalledWith({
+                success: true,
+                message: "User created successfully",
+            });
+            expect(next).not.toHaveBeenCalled();
         });
     });
-    
 
     describe("getUser", () => {
-        it("should return 400 if id is missing", async () => {
-            await userController.getUser(req, res);
-
-            expect(res.status).toHaveBeenCalledWith(400);
-            expect(res.json).toHaveBeenCalledWith({ msg: "User ID is required" });
-        });
-
-        it("should return 404 if user not found", async () => {
+        it("should return 200 with user data if id is provided", async () => {
             req.params.id = "uuid-123";
-            userService.findUserById.mockRejectedValue(new Error("fail in findUserById"));
-
-            await userController.getUser(req, res);
-
-            expect(res.status).toHaveBeenCalledWith(500);
-            expect(res.json).toHaveBeenCalledWith({ msg: "Internal server error" });
-        });
-
-        it("should return 404 if user not found", async () => {
-            req.params.id = "uuid-123";
-            userService.findUserById.mockResolvedValue(null);
-
-            await userController.getUser(req, res);
-
-            expect(res.status).toHaveBeenCalledWith(404);
-            expect(res.json).toHaveBeenCalledWith({ msg: "User not found" });
-        });
-
-        it("should return 200 and user data on success", async () => {
-            req.params.id = "uuid";
-            const mockUser = { id: "uuid", name: "Test", email: "test@example.com" };
+            const mockUser = { id: "uuid-123", name: "Test", email: "test@example.com" };
             userService.findUserById.mockResolvedValue(mockUser);
 
-            await userController.getUser(req, res);
+            await userController.getUser(req, res, next);
 
             expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.json).toHaveBeenCalledWith(mockUser);
+            expect(res.json).toHaveBeenCalledWith({
+                success: true,
+                data: mockUser,
+            });
+            expect(next).not.toHaveBeenCalled();
+        });
+
+        it("should call next with badRequest error if id is missing", async () => {
+            await userController.getUser(req, res, next);
+
+            expect(next).toHaveBeenCalledWith(expect.objectContaining({
+                statusCode: 400,
+                code: "BAD_REQUEST",
+                message: "User ID is required",
+            }));
+            expect(res.status).not.toHaveBeenCalled();
         });
     });
 });

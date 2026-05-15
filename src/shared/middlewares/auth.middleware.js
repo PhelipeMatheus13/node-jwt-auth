@@ -1,11 +1,12 @@
 const jwt = require("jsonwebtoken");
+const { unauthorized } = require("../../shared/errors/errors");
 
 function checkToken(req, res, next) {
     const authHeader = req.headers["authorization"];
     const token = authHeader && authHeader.split(" ")[1];
 
     if (!token) {
-        return res.status(401).json({ msg: "Access denied" });
+        return next(unauthorized({ message: "Access denied" }));
     }
 
     try {
@@ -16,9 +17,9 @@ function checkToken(req, res, next) {
     } catch (err) {
         console.log(err);
         if (err.name === 'TokenExpiredError') {
-            return res.status(401).json({ msg: 'Invalid expired' });
+           return next(unauthorized({ message: "Invalid expired", code: "TOKEN_EXPIRED" }));
         }
-        return res.status(400).json({ msg: "Invalid token" });
+        return next(unauthorized({ message: "Invalid token", code: "INVALID_TOKEN" }));
     }
 }
 

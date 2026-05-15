@@ -36,7 +36,8 @@ describe("User Routes (Integration)", () => {
                 .send(validUser);
 
             expect(res.statusCode).toBe(201);
-            expect(res.body.msg).toBe("User created successfully");
+            expect(res.body.success).toBe(true);
+            expect(res.body.message).toEqual("User created successfully");
 
             const user = await knex("users").where({ email: validUser.email }).first();
             expect(user).toBeTruthy();
@@ -50,8 +51,13 @@ describe("User Routes (Integration)", () => {
                 .send(invalidUser);
 
             expect(res.statusCode).toBe(422);
-            expect(res.body.errors).toBeDefined();
-            expect(res.body.errors[0].msg).toMatch(/at least 6 characters/);
+            expect(res.body.success).toBe(false);
+            expect(res.body.error).toMatchObject({
+                code: "VALIDATION_ERROR",
+                message: "Validation failed"
+            });
+            expect(res.body.error.details).toBeDefined();
+            expect(res.body.error.details[0].msg).toMatch(/at least 6 characters/);
         });
     });
 
@@ -75,18 +81,24 @@ describe("User Routes (Integration)", () => {
                 .set("Authorization", `Bearer ${accessToken}`);
 
             expect(res.statusCode).toBe(200);
-            expect(res.body).toMatchObject({
+            expect(res.body.success).toBe(true);
+            expect(res.body.data).toMatchObject({
                 id: userId,
                 name: "Test User",
                 email: "test@example.com"
             });
-            expect(res.body.password).toBeUndefined();
+            expect(res.body.data.password).toBeUndefined();
         });
 
-        it("should return 401 when no token is provided (middleware failure)", async () => {
+        it("should return 401 when no token is provided", async () => {
             const res = await request(app).get(`/users/${userId}`);
+
             expect(res.statusCode).toBe(401);
-            expect(res.body.msg).toBe("Access denied");
+            expect(res.body.success).toBe(false);
+            expect(res.body.error).toEqual({
+                code: "UNAUTHORIZED",
+                message: "Access denied"
+            });
         });
     });
 });

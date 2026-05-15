@@ -23,15 +23,19 @@ describe("Auth Service", () => {
         it("should throw if fail in user retrieval", async () => {
             userService.findUserByEmailWithPassword.mockRejectedValue(new Error("fake error"));
 
-            await expect(authService.login({ email: "test@example.com", password: "testPassword@123" }))
+            await expect(authService.login("test@example.com", "testPassword@123"))
                 .rejects.toThrow("fake error");
         });
 
         it("should throw if user does not exist", async () => {
             userService.findUserByEmailWithPassword.mockResolvedValue(undefined); // knex return undefined
 
-            await expect(authService.login({ email: "test@example.com", password: "testPassword@123" }))
-                .rejects.toThrow("INVALID");
+            await expect(authService.login("test@example.com", "testPassword@123"))
+                .rejects.toMatchObject({
+                    statusCode: 401,
+                    code: "INVALID_CREDENTIALS",
+                    message: "Invalid email or password",
+                });
         });
 
 
@@ -39,8 +43,12 @@ describe("Auth Service", () => {
             userService.findUserByEmailWithPassword.mockResolvedValue(userData);
             hashService.compare.mockResolvedValue(false);
 
-            await expect(authService.login({ email: "test@example.com", password: "wrongPassword" }))
-                .rejects.toThrow("INVALID");
+            await expect(authService.login("test@example.com", "wrongPassword"))
+                .rejects.toMatchObject({
+                    statusCode: 401,
+                    code: "INVALID_CREDENTIALS",
+                    message: "Invalid email or password",
+                });
         });
 
         it("should throw if fail in save refresh token", async () => {
@@ -52,7 +60,7 @@ describe("Auth Service", () => {
             hashService.hash.mockReturnValue("hashedToken");
             tokenService.saveRefreshToken.mockRejectedValue(new Error("fake error"));
 
-            await expect(authService.login({ email: "test@example.com", password: "testPassword@123" }))
+            await expect(authService.login("test@example.com", "testPassword@123"))
                 .rejects.toThrow("fake error");
         });   
         
@@ -66,7 +74,7 @@ describe("Auth Service", () => {
             tokenService.saveRefreshToken.mockResolvedValue("token-id-123");
 
 
-            const result = await authService.login({ email: "test@example.com", password: "testPassword@123" });
+            const result = await authService.login("test@example.com", "testPassword@123");
 
             expect(jwtService.generateAccessToken).toHaveBeenCalledWith("uuid-123");
             expect(jwtService.generateRefreshToken).toHaveBeenCalledWith("uuid-123");
@@ -109,7 +117,11 @@ describe("Auth Service", () => {
             tokenService.listRefreshTokensByUserId.mockResolvedValue([]);
 
             await expect(authService.refreshAccessToken(refreshToken))
-                .rejects.toThrow("NOT_FOUND");
+                .rejects.toMatchObject({
+                    statusCode: 404,
+                    code: "TOKEN_NOT_FOUND",
+                    message: "Refresh token not found",
+                });
         });
 
         it("should throw error an error if no hash matches", async () => {
@@ -124,7 +136,11 @@ describe("Auth Service", () => {
             jwtService.generateAccessToken.mockReturnValue("new-access-token");
             
             await expect(authService.refreshAccessToken(refreshToken))
-                .rejects.toThrow("NOT_FOUND");
+                .rejects.toMatchObject({
+                    statusCode: 404,
+                    code: "TOKEN_NOT_FOUND",
+                    message: "Refresh token not found",
+                });
         });
 
         it("should refresh access token successfully", async () => {
@@ -175,7 +191,11 @@ describe("Auth Service", () => {
             tokenService.listRefreshTokensByUserId.mockResolvedValue([]);
 
             await expect(authService.logout(refreshToken))
-                .rejects.toThrow("NOT_FOUND");
+                .rejects.toMatchObject({
+                    statusCode: 404,
+                    code: "TOKEN_NOT_FOUND",
+                    message: "Refresh token not found",
+                });
         });
 
 
@@ -189,7 +209,11 @@ describe("Auth Service", () => {
             hashService.compare.mockResolvedValueOnce(false);
             
             await expect(authService.logout(refreshToken))
-                .rejects.toThrow("NOT_FOUND");
+                .rejects.toMatchObject({
+                    statusCode: 404,
+                    code: "TOKEN_NOT_FOUND",
+                    message: "Refresh token not found",
+                });
         });
 
         it("should logout successfully", async () => {
@@ -239,7 +263,11 @@ describe("Auth Service", () => {
             tokenService.listRefreshTokensByUserId.mockResolvedValue([]);
 
             await expect(authService.logoutAll(refreshToken))
-                .rejects.toThrow("NOT_FOUND");
+                .rejects.toMatchObject({
+                    statusCode: 404,
+                    code: "TOKEN_NOT_FOUND",
+                    message: "Refresh token not found",
+                });
         });
 
 
@@ -253,7 +281,11 @@ describe("Auth Service", () => {
             hashService.compare.mockResolvedValueOnce(false);
             
             await expect(authService.logoutAll(refreshToken))
-                .rejects.toThrow("NOT_FOUND");
+                .rejects.toMatchObject({
+                    statusCode: 404,
+                    code: "TOKEN_NOT_FOUND",
+                    message: "Refresh token not found",
+                });
         });
 
         it("should logoutAll successfully", async () => {

@@ -1,47 +1,26 @@
+const asyncHandler = require("../../shared/utils/async.util");
 const userService = require("./user.service");
+const {badRequest} = require("../../shared/errors/errors");
 
-const register = async (req, res) => {
+const register = asyncHandler(async (req, res) => {
     const { name, email, password } = req.body;
+    await userService.createUser({ name, email, password });
+    res.status(201).json({
+        success: true,
+        message: 'User created successfully'
+    });
+});
 
-    try {
-        // ignore id returned by userRepository.createUser
-        await userService.createUser({
-            name: name,
-            email: email,
-            password: password
-        });
-
-        return res.status(201).json({ msg: "User created successfully" });
-    } catch (err) {
-        console.error(err);
-        
-        if (err.message === "ALREADY_EXISTS") {
-            return res.status(409).json({ msg: "Email already in use, please choose another"});
-        }
-
-        return res.status(500).json({ msg: "Internal server error" });
-    }
-};
-
-// Private route, protected by authMiddleware
-const getUser = async (req, res) => {
+// Private route, protected by auth.middleware
+const getUser = asyncHandler(async (req, res) =>  {
     const id = req.params.id;
-
-    if (!id) {
-        return res.status(400).json({ msg: "User ID is required" });
-    }
-
-    try {
-        const user = await userService.findUserById(id);
-        if (!user) {
-            return res.status(404).json({ msg: "User not found" });
-        }
-
-        return res.status(200).json(user);
-    } catch (err) {
-        return res.status(500).json({ msg: "Internal server error" });
-    }
-};
+    if (!id) throw badRequest({ message: "User ID is required" });
+    const user = await userService.findUserById(id);
+    res.status(200).json({
+        success: true,
+        data: user,
+    });
+});
 
 module.exports = {
     register,
