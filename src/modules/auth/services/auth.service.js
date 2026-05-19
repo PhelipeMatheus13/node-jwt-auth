@@ -2,6 +2,7 @@ const hashService = require("../../../shared/services/hash.service");
 const jwtService = require("./jwt.service");
 const userService = require("../../user/user.service");
 const tokenService = require("../../token/token.service");
+const {unauthorized, notFound} = require("../../../shared/errors/errors");
 
 
 const login = async (email, password) => {
@@ -10,13 +11,15 @@ const login = async (email, password) => {
  
     // For security reasons, any errors will be treated as invalid here
     if (!user || !(await hashService.compare(password, user.password))) {
-        throw new Error("INVALID");
+        throw unauthorized({
+            message: "Invalid email or password",
+            code: "INVALID_CREDENTIALS",
+        });
     }
 
     const accessToken = jwtService.generateAccessToken(user.id);
     const refreshToken = jwtService.generateRefreshToken(user.id);
     const decoded = jwtService.decodeRefreshToken(refreshToken);
-    
     // hash refresh token before saving in database
     const hashedToken = await hashService.hash(refreshToken);
 
@@ -34,18 +37,12 @@ const login = async (email, password) => {
 
 
 const refreshAccessToken = async (refreshToken) => {
-    let decoded;
-    try {
-        decoded = jwtService.decodeRefreshToken(refreshToken);
-    } catch (err) {
-        throw err;   
-    }
-
+    const decoded = jwtService.decodeRefreshToken(refreshToken);
     const userId = decoded.id;
     const hashes = await tokenService.listRefreshTokensByUserId(userId);
 
     if (!hashes.length) {
-        throw new Error("NOT_FOUND");
+        throw notFound({ message: "Refresh token not found", code: "TOKEN_NOT_FOUND" });
     }
 
     let match = false;
@@ -57,7 +54,7 @@ const refreshAccessToken = async (refreshToken) => {
     }
 
     if (!match) {
-        throw new Error("NOT_FOUND");
+        throw notFound({ message: "Refresh token not found", code: "TOKEN_NOT_FOUND" });
     }
 
     return jwtService.generateAccessToken(decoded.id);
@@ -65,18 +62,12 @@ const refreshAccessToken = async (refreshToken) => {
 
 
 const logout = async (refreshToken) => {
-    let decoded;
-    try {
-        decoded = jwtService.decodeRefreshToken(refreshToken);
-    } catch (err) {
-        throw err;
-    }
-
+    const decoded = jwtService.decodeRefreshToken(refreshToken);
     const userId = decoded.id;
     const hashes = await tokenService.listRefreshTokensByUserId(userId);
 
     if (!hashes.length) {
-        throw new Error("NOT_FOUND");
+        throw notFound({ message: "Refresh token not found", code: "TOKEN_NOT_FOUND" });
     }
 
     let matchedHash = null;
@@ -88,25 +79,19 @@ const logout = async (refreshToken) => {
     }
 
     if (!matchedHash) {
-        throw new Error("NOT_FOUND");
+        throw notFound({ message: "Refresh token not found", code: "TOKEN_NOT_FOUND" });
     }
 
     return await tokenService.revokeRefreshToken(matchedHash);
 };
 
 const logoutAll = async (refreshToken) => {
-    let decoded;
-    try {
-        decoded = jwtService.decodeRefreshToken(refreshToken);
-    } catch (err) {
-        throw err;
-    }
-
+    const decoded = jwtService.decodeRefreshToken(refreshToken);
     const userId = decoded.id;
     const hashes = await tokenService.listRefreshTokensByUserId(userId);
 
     if (!hashes.length) {
-        throw new Error("NOT_FOUND");
+        throw notFound({ message: "Refresh token not found", code: "TOKEN_NOT_FOUND" });
     }
 
     let match = false;
@@ -118,7 +103,7 @@ const logoutAll = async (refreshToken) => {
     }
 
     if (!match) {
-        throw new Error("NOT_FOUND");
+        throw notFound({ message: "Refresh token not found", code: "TOKEN_NOT_FOUND" });
     }
 
     return tokenService.revokeAllRefreshTokensByUserId(userId);

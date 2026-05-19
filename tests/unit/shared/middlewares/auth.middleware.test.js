@@ -21,59 +21,66 @@ describe("Auth Middleware (Unit)", () => {
 
     beforeEach(() => {
         req = { headers: {} };
-        res = {
-            status: jest.fn().mockReturnThis(),
-            json: jest.fn().mockReturnThis(),
-        };
+        res = {};
         next = jest.fn();
         jest.clearAllMocks();
     });
 
-    it("should return 401 if no token provided", () => {
+    it("should call next with unauthorized error if no token provided", () => {
         checkToken(req, res, next);
-        expect(res.status).toHaveBeenCalledWith(401);
-        expect(res.json).toHaveBeenCalledWith({ msg: "Access denied" });
-        expect(next).not.toHaveBeenCalled();
+        expect(next).toHaveBeenCalledWith(
+            expect.objectContaining({
+                statusCode: 401,
+                code: "UNAUTHORIZED",
+                message: "Access denied",
+            })
+        );
     });
 
-    it("should return 401 if token is expired", () => {
+    it("should call next with unauthorized if token is expired", () => {
         req.headers.authorization = "Bearer expired.token";
         const err = new Error("expired");
         err.name = "TokenExpiredError";
         jwt.verify.mockImplementation(() => { throw err; });
 
         checkToken(req, res, next);
-        expect(res.status).toHaveBeenCalledWith(401);
-        expect(res.json).toHaveBeenCalledWith({ msg: "Invalid expired" });
-        expect(next).not.toHaveBeenCalled();
+        expect(next).toHaveBeenCalledWith(
+            expect.objectContaining({
+                statusCode: 401,
+                code: "TOKEN_EXPIRED",
+                message: "Invalid expired",
+            })
+        );
     });
 
-    it("should return 400 if token is invalid", () => {
+    it("should call next with unauthorized if token is invalid", () => {
         req.headers.authorization = "Bearer invalid.token";
         jwt.verify.mockImplementation(() => { throw new Error("invalid signature"); });
 
         checkToken(req, res, next);
-        expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({ msg: "Invalid token" });
-        expect(next).not.toHaveBeenCalled();
-    });   
+        expect(next).toHaveBeenCalledWith(
+            expect.objectContaining({
+                statusCode: 401,
+                code: "INVALID_TOKEN",
+                message: "Invalid token",
+            })
+        );
+    });
 
-    it("should call next if token is valid", () => {
+    it("should call next without arguments when token is valid", () => {
         req.headers.authorization = "Bearer valid.token";
         jwt.verify.mockReturnValue({ id: "user-uuid" });
 
         checkToken(req, res, next);
-        expect(next).toHaveBeenCalled();
-        expect(res.status).not.toHaveBeenCalled();
-        expect(res.json).not.toHaveBeenCalled();
+        expect(next).toHaveBeenCalledWith(); // sem erro
     });
 
-    it("should extract token correctly when authorization header has Bearer scheme", () => {
+    it("should extract token correctly", () => {
         req.headers.authorization = "Bearer abc.def.ghi";
         jwt.verify.mockReturnValue({ id: "uuid" });
 
         checkToken(req, res, next);
-        expect(jwt.verify).toHaveBeenCalledWith("abc.def.ghi", "secret"); // <-- consistente
-        expect(next).toHaveBeenCalled();
+        expect(jwt.verify).toHaveBeenCalledWith("abc.def.ghi", "secret");
+        expect(next).toHaveBeenCalledWith();
     });
 });

@@ -23,7 +23,12 @@ describe("User Service (Unit)", () => {
             userRepository.existsByEmail.mockResolvedValue(true);
 
             await expect(userService.createUser({ email: "test@example.com", password: "testPassword@123" }))
-                .rejects.toThrow("ALREADY_EXISTS");
+                .rejects.toMatchObject({
+                    statusCode: 409,
+                    code: "ALREADY_EXISTS",
+                    message: "Email already in use, please choose another",
+                    isOperational: true,
+                });
         });
 
         it("should throw if fail in user creation", async () => {
@@ -58,6 +63,7 @@ describe("User Service (Unit)", () => {
     describe("findUserById", () => {
         const userId = "uuid-123";
         const userResponse = { id: userId, name: "Test", email: "test@example.com" };
+
         it("should throw an error if repository.findById fails", async () => {
             userRepository.findById.mockRejectedValue(new Error("fake error"));
 
@@ -65,15 +71,17 @@ describe("User Service (Unit)", () => {
                 .rejects.toThrow("fake error");
         });
 
-        it("should return user without password", async () => {
-            userRepository.findById.mockResolvedValue({
-                id: userId, name: "Test", email: "test@example.com", password: "secret"
-            });
 
-            const result = await userService.findUserById(userId);
+        it("should throw NOT_FOUND error if user does not exist", async () => {
+           userRepository.findById.mockResolvedValue(undefined); // knex returns undefined
 
-            expect(result).toEqual(userResponse);
-            expect(result.password).toBeUndefined();
+            await expect(userService.findUserById(userId))
+                .rejects.toMatchObject({
+                    statusCode: 404,
+                    code: "NOT_FOUND",
+                    message: "User not found",
+                    isOperational: true,
+                });
         });
 
         it("should return user without password", async () => {
@@ -87,12 +95,6 @@ describe("User Service (Unit)", () => {
             expect(result.password).toBeUndefined();
         });
 
-        it("should return null if user not found", async () => {
-            userRepository.findById.mockResolvedValue(undefined); // knex returns undefined for non-existing records
-            const result = await userService.findUserById(userId);
-            
-            expect(result).toBeUndefined();
-        });
     });
 
     describe("findUserByEmailWithPassword", () => {
@@ -111,11 +113,16 @@ describe("User Service (Unit)", () => {
             expect(result).toEqual(userResponse);
         });
 
-        it("should return null if user not found", async () => {
-            userRepository.findByEmail.mockResolvedValue(undefined); // knex returns undefined for non-existing records
-            const result = await userService.findUserByEmailWithPassword(email);
+        it("should throw NOT_FOUND error if user does not exist", async () => {
+            userRepository.findByEmail.mockResolvedValue(undefined); // knex returns undefined
 
-            expect(result).toBeUndefined();
+            await expect(userService.findUserByEmailWithPassword(email))
+                .rejects.toMatchObject({
+                    statusCode: 404,
+                    code: "NOT_FOUND",
+                    message: "User not found",
+                    isOperational: true,
+                });
         });
     });
 });

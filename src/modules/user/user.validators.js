@@ -1,6 +1,6 @@
 const { body, validationResult } = require("express-validator");
+const {unprocessable} = require("../../shared/errors/errors");
 
-// Validations for user registration
 const validateRegister = [
     body("name")
         .notEmpty().withMessage("Name is required")
@@ -21,15 +21,16 @@ const validateRegister = [
         .notEmpty().withMessage("Password confirmation is required")
         .custom((value, { req }) => value === req.body.password).withMessage("Passwords do not match"),
 
-    // Middleware to check for validation errors
     (req, res, next) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.status(422).json({ errors: errors.array() });
+            return next(unprocessable({
+                message: 'Validation failed',
+                details: errors.array()
+            }));
         }
         next();
     }
 ];
-
 
 module.exports = { validateRegister };

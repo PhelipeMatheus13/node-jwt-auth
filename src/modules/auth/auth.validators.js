@@ -1,4 +1,5 @@
 const { body, validationResult } = require("express-validator");
+const {unprocessable} = require("../../shared/errors/errors");
 
 
 // Validations for user login
@@ -14,7 +15,10 @@ const validateLogin = [
     (req, res, next) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.status(422).json({ errors: errors.array() });
+            return next(unprocessable({
+                message: 'Validation failed',
+                details: errors.array()
+            }));
         }
         next();
     }

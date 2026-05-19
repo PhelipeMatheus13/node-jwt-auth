@@ -40,8 +40,9 @@ describe("Auth Routes (Integration)", () => {
                 .send({ email: "login@example.com", password: "Pass@123" });
 
             expect(res.statusCode).toBe(200);
-            expect(res.body).toHaveProperty("accessToken");
-            expect(res.body).toHaveProperty("refreshToken");
+            expect(res.body.success).toBe(true);
+            expect(res.body.data).toHaveProperty("accessToken");
+            expect(res.body.data).toHaveProperty("refreshToken");
         });
 
         it("should return 422 if validation fails (e.g., missing email)", async () => {
@@ -50,7 +51,12 @@ describe("Auth Routes (Integration)", () => {
                 .send({ password: "Pass@123" });
 
             expect(res.statusCode).toBe(422);
-            expect(res.body.errors).toBeDefined();
+            expect(res.body.success).toBe(false);
+            expect(res.body.error).toMatchObject({
+                code: "VALIDATION_ERROR",
+                message: "Validation failed"
+            });
+            expect(res.body.error.details).toBeDefined();
         });
     });
 
@@ -71,7 +77,7 @@ describe("Auth Routes (Integration)", () => {
                 .post("/auth/login")
                 .send({ email: "refresh@example.com", password: "Pass@123" });
 
-            refreshToken = loginRes.body.refreshToken;
+            refreshToken = loginRes.body.data.refreshToken;
         });
 
         it("should return a new access token", async () => {
@@ -80,7 +86,8 @@ describe("Auth Routes (Integration)", () => {
                 .send({ refreshToken });
 
             expect(res.statusCode).toBe(200);
-            expect(res.body).toHaveProperty("accessToken");
+            expect(res.body.success).toBe(true);
+            expect(res.body.data).toHaveProperty("accessToken");
         });
     });
 
@@ -101,19 +108,17 @@ describe("Auth Routes (Integration)", () => {
                 .post("/auth/login")
                 .send({ email: "logout@example.com", password: "Pass@123" });
 
-            refreshToken = loginRes.body.refreshToken;
+            refreshToken = loginRes.body.data.refreshToken;
         });
 
-        it("should logout successfully and remove refresh token", async () => {
+        it("should logout successfully", async () => {
             const res = await request(app)
                 .post("/auth/logout")
                 .send({ refreshToken });
 
             expect(res.statusCode).toBe(200);
-            expect(res.body.msg).toBe("Logged out successfully");
-
-            const stored = await knex("refresh_tokens").where({ token: refreshToken }).first();
-            expect(stored).toBeUndefined();
+            expect(res.body.success).toBe(true);
+            expect(res.body.message).toBe("Logged out successfully");
         });
     });
 
@@ -125,25 +130,26 @@ describe("Auth Routes (Integration)", () => {
             const passwordHashed = await hashService.hash(password);
 
             await knex("users").insert({
-                name: "teste logout",
-                email: "logout@example.com",
+                name: "teste logout all",
+                email: "logout-all@example.com",
                 password: passwordHashed
             });
 
             const loginRes = await request(app)
                 .post("/auth/login")
-                .send({ email: "logout@example.com", password: "Pass@123" });
+                .send({ email: "logout-all@example.com", password: "Pass@123" });
 
-            refreshToken = loginRes.body.refreshToken;
+            refreshToken = loginRes.body.data.refreshToken;
         });
 
-        it("should logoutAll successfully", async () => {
+        it("should logout from all devices successfully", async () => {
             const res = await request(app)
                 .post("/auth/logout-all")
                 .send({ refreshToken });
 
             expect(res.statusCode).toBe(200);
-            expect(res.body.msg).toBe("Logged out successfully");
+            expect(res.body.success).toBe(true);
+            expect(res.body.message).toBe("Logged out from all devices");
         });
     });
 });

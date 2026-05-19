@@ -1,5 +1,6 @@
 require("dotenv").config();
 const express = require("express");
+const errorHandler = require("./shared/middlewares/error.middleware")
 
 // Import routes
 const authRoutes = require("./modules/auth/auth.routes");
@@ -18,5 +19,8 @@ app.get("/", (req, res) => {
 // config routes
 app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
+
+// handler for error
+app.use(errorHandler);
 
 module.exports = app; // Export the app for testing

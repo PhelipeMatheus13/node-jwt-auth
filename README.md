@@ -9,6 +9,7 @@ A simple and secure authentication API built with Node.js, Express, and PostgreS
 - Protected routes using middleware
 - Refresh token rotation stored in PostgreSQL
 - Logout with token revocation
+- Centralized error handling with custom `AppError` and `asyncHandler` wrapper
 - Input validation with express-validator
 - Repository pattern for data access
 - SQL migrations with Knex.js

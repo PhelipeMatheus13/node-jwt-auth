@@ -1,14 +1,11 @@
 const { validateRegister } = require("../../../../src/modules/user/user.validators");
 
-describe("Auth Validators (Unit)", () => {
+describe("User Validators (Unit)", () => {
     let req, res, next;
 
     beforeEach(() => {
         req = { body: {} };
-        res = {
-            status: jest.fn().mockReturnThis(),
-            json: jest.fn().mockReturnThis(),
-        };
+        res = {};
         next = jest.fn();
         jest.clearAllMocks();
     });
@@ -29,11 +26,10 @@ describe("Auth Validators (Unit)", () => {
                 confirmPassword: "Pass@123"
             });
 
-            expect(next).toHaveBeenCalled();
-            expect(res.status).not.toHaveBeenCalled();
+            expect(next).toHaveBeenCalledWith();
         });
 
-        it("should return 422 if name is empty", async () => {
+        it("should call next with error if name is empty", async () => {
             await runValidation({
                 name: "",
                 email: "john@example.com",
@@ -41,15 +37,18 @@ describe("Auth Validators (Unit)", () => {
                 confirmPassword: "Pass@123"
             });
 
-            expect(res.status).toHaveBeenCalledWith(422);
-            expect(res.json).toHaveBeenCalledWith({
-                errors: expect.arrayContaining([
-                expect.objectContaining({ msg: "Name is required" })
-                ])
-            });
+            expect(next).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    statusCode: 422,
+                    code: "VALIDATION_ERROR",
+                    details: expect.arrayContaining([
+                        expect.objectContaining({ msg: "Name is required" })
+                    ])
+                })
+            );
         });
 
-        it("should return 422 if name is less than 3 characters", async () => {
+        it("should call next with error if name is less than 3 characters", async () => {
             await runValidation({
                 name: "Jo",
                 email: "john@example.com",
@@ -57,15 +56,18 @@ describe("Auth Validators (Unit)", () => {
                 confirmPassword: "Pass@123"
             });
 
-            expect(res.status).toHaveBeenCalledWith(422);
-            expect(res.json).toHaveBeenCalledWith({
-                errors: expect.arrayContaining([
-                expect.objectContaining({ msg: "Name must be at least 3 characters long" })
-                ])
-            });
+            expect(next).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    statusCode: 422,
+                    code: "VALIDATION_ERROR",
+                    details: expect.arrayContaining([
+                        expect.objectContaining({ msg: "Name must be at least 3 characters long" })
+                    ])
+                })
+            );
         });
 
-        it("should return 422 if email is invalid", async () => {
+        it("should call next with error if email is invalid", async () => {
             await runValidation({
                 name: "John",
                 email: "not-an-email",
@@ -73,15 +75,18 @@ describe("Auth Validators (Unit)", () => {
                 confirmPassword: "Pass@123"
             });
 
-            expect(res.status).toHaveBeenCalledWith(422);
-            expect(res.json).toHaveBeenCalledWith({
-                errors: expect.arrayContaining([
-                expect.objectContaining({ msg: "Please provide a valid email address" })
-                ])
-            });
+            expect(next).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    statusCode: 422,
+                    code: "VALIDATION_ERROR",
+                    details: expect.arrayContaining([
+                        expect.objectContaining({ msg: "Please provide a valid email address" })
+                    ])
+                })
+            );
         });
 
-        it("should return 422 if password is missing", async () => {
+        it("should call next with error if password is missing", async () => {
             await runValidation({
                 name: "John",
                 email: "john@example.com",
@@ -89,15 +94,18 @@ describe("Auth Validators (Unit)", () => {
                 confirmPassword: "Pass@123"
             });
 
-            expect(res.status).toHaveBeenCalledWith(422);
-            expect(res.json).toHaveBeenCalledWith({
-                errors: expect.arrayContaining([
-                expect.objectContaining({ msg: "Password is required" })
-                ])
-            });
+            expect(next).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    statusCode: 422,
+                    code: "VALIDATION_ERROR",
+                    details: expect.arrayContaining([
+                        expect.objectContaining({ msg: "Password is required" })
+                    ])
+                })
+            );
         });
 
-        it("should return 422 if password is less than 6 characters", async () => {
+        it("should call next with error if password is less than 6 characters", async () => {
             await runValidation({
                 name: "John",
                 email: "john@example.com",
@@ -105,15 +113,18 @@ describe("Auth Validators (Unit)", () => {
                 confirmPassword: "Pass1"
             });
 
-            expect(res.status).toHaveBeenCalledWith(422);
-            expect(res.json).toHaveBeenCalledWith({
-                errors: expect.arrayContaining([
-                expect.objectContaining({ msg: "Password must be at least 6 characters long" })
-                ])
-            });
+            expect(next).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    statusCode: 422,
+                    code: "VALIDATION_ERROR",
+                    details: expect.arrayContaining([
+                        expect.objectContaining({ msg: "Password must be at least 6 characters long" })
+                    ])
+                })
+            );
         });
 
-        it("should return 422 if password lacks special character", async () => {
+        it("should call next with error if password lacks special character", async () => {
             await runValidation({
                 name: "John",
                 email: "john@example.com",
@@ -121,15 +132,18 @@ describe("Auth Validators (Unit)", () => {
                 confirmPassword: "Password123"
             });
 
-            expect(res.status).toHaveBeenCalledWith(422);
-            expect(res.json).toHaveBeenCalledWith({
-                errors: expect.arrayContaining([
-                expect.objectContaining({ msg: "Password must contain at least one special character" })
-                ])
-            });
+            expect(next).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    statusCode: 422,
+                    code: "VALIDATION_ERROR",
+                    details: expect.arrayContaining([
+                        expect.objectContaining({ msg: "Password must contain at least one special character" })
+                    ])
+                })
+            );
         });
 
-        it("should return 422 if confirmPassword is missing", async () => {
+        it("should call next with error if confirmPassword is missing", async () => {
             await runValidation({
                 name: "John",
                 email: "john@example.com",
@@ -137,15 +151,18 @@ describe("Auth Validators (Unit)", () => {
                 confirmPassword: ""
             });
 
-            expect(res.status).toHaveBeenCalledWith(422);
-            expect(res.json).toHaveBeenCalledWith({
-                errors: expect.arrayContaining([
-                expect.objectContaining({ msg: "Password confirmation is required" })
-                ])
-            });
+            expect(next).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    statusCode: 422,
+                    code: "VALIDATION_ERROR",
+                    details: expect.arrayContaining([
+                        expect.objectContaining({ msg: "Password confirmation is required" })
+                    ])
+                })
+            );
         });
 
-        it("should return 422 if passwords do not match", async () => {
+        it("should call next with error if passwords do not match", async () => {
             await runValidation({
                 name: "John",
                 email: "john@example.com",
@@ -153,12 +170,15 @@ describe("Auth Validators (Unit)", () => {
                 confirmPassword: "Different@123"
             });
 
-            expect(res.status).toHaveBeenCalledWith(422);
-            expect(res.json).toHaveBeenCalledWith({
-                errors: expect.arrayContaining([
-                expect.objectContaining({ msg: "Passwords do not match" })
-                ])
-            });
+            expect(next).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    statusCode: 422,
+                    code: "VALIDATION_ERROR",
+                    details: expect.arrayContaining([
+                        expect.objectContaining({ msg: "Passwords do not match" })
+                    ])
+                })
+            );
         });
     });
 });

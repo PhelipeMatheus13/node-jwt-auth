@@ -4,18 +4,17 @@ jest.mock("../../../../src/modules/auth/services/auth.service");
 const authService = require("../../../../src/modules/auth/services/auth.service");
 
 describe("Auth Controller (Unit)", () => {
-  let req, res;
+    let req, res, next;
 
     beforeEach(() => {
-        req = { body: {} };
+        req = { body: {}, params: {} };
         res = {
             status: jest.fn().mockReturnThis(),
             json: jest.fn().mockReturnThis(),
         };
-
+        next = jest.fn(); // Mock next function for error handling
         jest.clearAllMocks();
     });
-
 
     describe("login", () => {
         const body = {
@@ -29,35 +28,14 @@ describe("Auth Controller (Unit)", () => {
                 accessToken: "fakeAccessToken",
                 refreshToken: "fakeRefreshToken"
             });
-
-            await authController.login(req, res);
+            await authController.login(req, res, next);
 
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith({
-                msg: "Login successful",
-                accessToken: "fakeAccessToken",
-                refreshToken: "fakeRefreshToken"
+                success: true,
+                data: { accessToken: "fakeAccessToken", refreshToken: "fakeRefreshToken" }
             });
-        });
-        
-        it("should return 401 if invalid credentials ", async () => {
-            req.body = body;
-            authService.login.mockRejectedValue(new Error("INVALID"));
-
-            await authController.login(req, res);
-
-            expect(res.status).toHaveBeenCalledWith(401);
-            expect(res.json).toHaveBeenCalledWith({ msg: "Invalid email or password" });
-        });
-
-        it("should return 500 on unexpected error", async () => {
-            req.body = body;
-            authService.login.mockRejectedValue(new Error("fake error"));
-
-            await authController.login(req, res);
-
-            expect(res.status).toHaveBeenCalledWith(500);
-            expect(res.json).toHaveBeenCalledWith({ msg: "Internal server error" });
+            expect(next).not.toHaveBeenCalled();
         });
     });
 
@@ -69,51 +47,25 @@ describe("Auth Controller (Unit)", () => {
         it("should return 200 and ne access token on successful refreshing Token", async () => {
             req.body = body;
             authService.refreshAccessToken.mockResolvedValue("test-access-token")
-
-            await authController.refreshToken(req, res);
+            await authController.refreshToken(req, res, next);
 
             expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.json).toHaveBeenCalledWith({accessToken: "test-access-token"});
+            expect(res.json).toHaveBeenCalledWith({
+                success: true,
+                data: { accessToken: "test-access-token" }
+            });
+            expect(next).not.toHaveBeenCalled();
         });
         
-        it("should return 401 if Refresh token is empty", async () => {
+        it("should return 400 if Refresh token is invalid", async () => {
             req.body = {};
+            await authController.refreshToken(req, res, next);
 
-            await authController.refreshToken(req, res);
-
-            expect(res.status).toHaveBeenCalledWith(401);
-            expect(res.json).toHaveBeenCalledWith({ msg: "Refresh token is required" });
-        });
-
-        it("should return 401 if invalid Refresh token", async () => {
-            req.body = body;
-            authService.refreshAccessToken.mockRejectedValue(new Error("INVALID"))
-
-            await authController.refreshToken(req, res);
-
-            expect(res.status).toHaveBeenCalledWith(401);
-            expect(res.json).toHaveBeenCalledWith({ msg: "Invalid or expired token, please login again" });
-        });
-
-
-        it("should return 403 if not found", async () => {
-            req.body = body;
-            authService.refreshAccessToken.mockRejectedValue(new Error("NOT_FOUND"))
-
-            await authController.refreshToken(req, res);
-
-            expect(res.status).toHaveBeenCalledWith(403);
-            expect(res.json).toHaveBeenCalledWith({ msg: "The provided refresh token is invalid and cannot be used for this action" });
-        });
-
-        it("should return 500 on unexpected error", async () => {
-            req.body = body;
-            authService.refreshAccessToken.mockRejectedValue(new Error("fake error"));
-
-            await authController.refreshToken(req, res);
-
-            expect(res.status).toHaveBeenCalledWith(500);
-            expect(res.json).toHaveBeenCalledWith({ msg: "Internal server error" });
+            expect(next).toHaveBeenCalledWith(expect.objectContaining({
+                statusCode: 400,
+                code: "BAD_REQUEST",
+                message: "Refresh token is required"
+            }));
         });
     });
 
@@ -125,49 +77,24 @@ describe("Auth Controller (Unit)", () => {
         it("should return 200 on successful logout", async () => {
             req.body = body;
             authService.logout.mockResolvedValue(null);
+            await authController.logout(req, res, next);
 
-            await authController.logout(req, res);
-
-            expect(res.status).toHaveBeenCalledWith(200);
+            expect(res.json).toHaveBeenCalledWith({
+                success: true,
+                message: "Logged out successfully"
+            });
+            expect(next).not.toHaveBeenCalled();
         });
         
-        it("should return 401 if Refresh token is empty", async () => {
+        it("should return 400 if Refresh token is invalid", async () => {
             req.body = {};
+            await authController.logout(req, res, next);
 
-            await authController.logout(req, res);
-
-            expect(res.status).toHaveBeenCalledWith(401);
-            expect(res.json).toHaveBeenCalledWith({ msg: "Refresh token is required" });
-        });
-
-        it("should return 401 if invalid Refresh token", async () => {
-            req.body = body;
-            authService.logout.mockRejectedValue(new Error("INVALID"))
-
-            await authController.logout(req, res);
-
-            expect(res.status).toHaveBeenCalledWith(401);
-            expect(res.json).toHaveBeenCalledWith({ msg: "Invalid or expired refresh token" });
-        });
-        
-        it("should return 403 if Refresh token not exists", async () => {
-            req.body = body;
-            authService.logout.mockRejectedValue(new Error("NOT_FOUND"));
-
-            await authController.logout(req, res);
-
-            expect(res.status).toHaveBeenCalledWith(403);
-            expect(res.json).toHaveBeenCalledWith({ msg: "The provided refresh token is invalid and cannot be used for this action" });
-        });
-
-        it("should return 500 on unexpected error", async () => {
-            req.body = body;
-            authService.logout.mockRejectedValue(new Error("fake error"));
-
-            await authController.logout(req, res);
-
-            expect(res.status).toHaveBeenCalledWith(500);
-            expect(res.json).toHaveBeenCalledWith({ msg: "Internal server error" });
+            expect(next).toHaveBeenCalledWith(expect.objectContaining({
+                statusCode: 400,
+                code: "BAD_REQUEST",
+                message: "Refresh token is required"
+            }));
         });
     });
 
@@ -179,49 +106,25 @@ describe("Auth Controller (Unit)", () => {
         it("should return 200 on successful logout", async () => {
             req.body = body;
             authService.logoutAll.mockResolvedValue(null);
+            await authController.logoutAll(req, res, next);
 
-            await authController.logoutAll(req, res);
-
-            expect(res.status).toHaveBeenCalledWith(200);
+            expect(res.json).toHaveBeenCalledWith({
+                success: true,
+                message: "Logged out from all devices"
+            });
+            expect(next).not.toHaveBeenCalled();
         });
         
-        it("should return 401 if Refresh token is empty", async () => {
+        it("should return 400 if Refresh token is invalid", async () => {
             req.body = {};
+            await authController.logoutAll(req, res, next);
 
-            await authController.logoutAll(req, res);
-
-            expect(res.status).toHaveBeenCalledWith(401);
-            expect(res.json).toHaveBeenCalledWith({ msg: "Refresh token is required" });
+            expect(next).toHaveBeenCalledWith(expect.objectContaining({
+                statusCode: 400,
+                code: "BAD_REQUEST",
+                message: "Refresh token is required",
+            }));
         });
 
-        it("should return 401 if invalid Refresh token", async () => {
-            req.body = body;
-            authService.logoutAll.mockRejectedValue(new Error("INVALID"))
-
-            await authController.logoutAll(req, res);
-
-            expect(res.status).toHaveBeenCalledWith(401);
-            expect(res.json).toHaveBeenCalledWith({ msg: "Invalid or expired refresh token" });
-        });
-        
-        it("should return 403 if Refresh token not exists", async () => {
-            req.body = body;
-            authService.logoutAll.mockRejectedValue(new Error("NOT_FOUND"));
-
-            await authController.logoutAll(req, res);
-
-            expect(res.status).toHaveBeenCalledWith(403);
-            expect(res.json).toHaveBeenCalledWith({ msg: "The provided refresh token is invalid and cannot be used for this action" });
-        });
-
-        it("should return 500 on unexpected error", async () => {
-            req.body = body;
-            authService.logoutAll.mockRejectedValue(new Error("fake error"));
-
-            await authController.logoutAll(req, res);
-
-            expect(res.status).toHaveBeenCalledWith(500);
-            expect(res.json).toHaveBeenCalledWith({ msg: "Internal server error" });
-        });
     });
 });
