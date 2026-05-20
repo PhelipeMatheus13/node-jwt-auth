@@ -1,3 +1,5 @@
+// Error handling middleware
+// This middleware padronizes error responses and handles unexpected errors gracefully.
 const errorHandler = (err, req, res, next) => {
     // check for a known error
     if (err.isOperational) {

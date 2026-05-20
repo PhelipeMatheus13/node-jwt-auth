@@ -1,3 +1,5 @@
+// create a custom error class that extends the built-in Error class, 
+// allowing us to add additional properties and methods specific to our application's needs
 class AppError extends Error {
     constructor({ statusCode = 500, code = 'INTERNAL_ERROR', message = 'Internal server error', details = null } = {}) {
         // super(message) initializes the parent class (Error), generating the "real" JS error with message and stack trace
@@ -25,6 +27,8 @@ class AppError extends Error {
     }
 }
 
+// Helper functions to create specific types of errors with predefined status codes and messages
+// easy to extend and maintain, ensuring consistency across the application when throwing errors
 const badRequest = (options = {}) => new AppError({
     statusCode: 400,
     code: 'BAD_REQUEST',

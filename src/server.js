@@ -1,3 +1,5 @@
+// starting point
+// when running the command npm start, the package.json file that is already configured will run this file and start the server
 const app = require("./app");
 const { checkConnection } = require("./shared/config/database");
 
@@ -19,4 +21,5 @@ const startServer = async () => {
     });
 };
 
-startServer();
+// execute the function 
+startServer(); 

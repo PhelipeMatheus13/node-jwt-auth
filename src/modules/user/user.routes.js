@@ -4,7 +4,7 @@ const userController = require("./user.controller");
 const checkToken = require("../../shared/middlewares/auth.middleware");
 const { validateRegister } = require("./user.validators");
 
-
+// TODO: add swagger documentation for user routes
 router.post("/register", validateRegister, userController.register);
 router.get("/:id", checkToken, userController.getUser);
 

@@ -14,7 +14,8 @@ async function setupTestDatabase({ migrationDirectory }) {
         .withExposedPorts(5432) 
         .start();
 
-    // config knex 
+    // config knex - Creates an isolated Knex instance.
+    // New instance: new pool, new configuration, new client pg
     const knex = knexBuilder({
         client: "pg",
         connection: {
@@ -38,6 +39,7 @@ async function setupTestDatabase({ migrationDirectory }) {
         await container.stop(); // stop the container
     };
 
+    // return the knex instance, container reference, and stop function for cleanup
     return { knex, container, stop };
 }
 

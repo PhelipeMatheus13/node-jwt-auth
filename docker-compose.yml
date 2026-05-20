@@ -1,23 +1,36 @@
+# create a stable development environment
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:15-alpine
-    container_name: jwtauth_postgres_dev
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
-      POSTGRES_DB: ${DB_NAME:-jwtauth_dev}
-    ports:
-      - "${DB_PORT:-5432}:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+    postgres:
+        # Official lightweight PostgreSQL image based on Alpine Linux
+        # Smaller image size. faster startup and lower resource usage
+        image: postgres:15-alpine
+        # Fixed container name for easier reference and management
+        container_name: jwtauth_postgres_dev
+        # Automatically restarts the container unless it is manually stopped
+        restart: unless-stopped
+        environment:
+            # Database user used during PostgreSQL initialization
+            # Uses environment variable if available, otherwise fallback value
+            POSTGRES_USER: ${DB_USER:-postgres}
+            POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+            POSTGRES_DB: ${DB_NAME:-jwtauth_dev}
+        ports:
+            # Maps local machine port -> container PostgreSQL port
+            - "${DB_PORT:-5432}:5432"
+        volumes:
+            # Named Docker volume for persistent database storage
+            # Prevents data loss when container is removed/recreated
+            # PostgreSQL stores physical database files inside: /var/lib/postgresql/data
+            - postgres_data:/var/lib/postgresql/data
+        healthcheck:
+            # Verifies if PostgreSQL is accepting connections
+            test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+            interval: 5s
+            timeout: 5s
+            retries: 5
 
 volumes:
+  # Docker creates and manages this volume automatically 
   postgres_data:
