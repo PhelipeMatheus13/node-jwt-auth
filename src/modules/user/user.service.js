@@ -15,16 +15,10 @@ const createUser = async (data) => {
     });
 };
 
-// internal  function for security: do not return the password hash
-const removeSensitiveFields = (user) => {
-    const { password, ...userWithoutPassword } = user;
-    return userWithoutPassword;
-};
-
 const findUserById = async (id) => {
     const user = await userRepository.findById(id);
     if (!user) throw notFound({ message: "User not found" });
-    return removeSensitiveFields(user);
+    return user;
 };
 
 // sensitive function, returns the password hash.
