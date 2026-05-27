@@ -11,7 +11,7 @@ const jwtService = require("../../../../../src/modules/auth/services/jwt.service
 const tokenService = require("../../../../../src/modules/token/token.service");
 
 
-describe("Auth Service", () => {
+describe("Auth Service (Unit)", () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });

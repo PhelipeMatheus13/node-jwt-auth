@@ -1,6 +1,6 @@
 const { loginInputDTO, tokenOutputDTO } = require("../../../../src/modules/auth/auth.dtos");
 
-describe("Auth DTOs", () => {
+describe("Auth DTOs (Unit)", () => {
     describe("loginInputDTO", () => {
         it("should pick only email and password", () => {
             const body = { email: "a@b.com", password: "secret", extra: "noise" };
