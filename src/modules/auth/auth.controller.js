@@ -1,13 +1,14 @@
 const asyncHandler = require("../../shared/utils/async.util");
 const authService = require("./services/auth.service");
 const { badRequest } = require("../../shared/errors/errors");
+const { loginInputDTO, tokenOutputDTO } = require("./auth.dtos");
 
 const login = asyncHandler(async (req, res) => {
-    const { email, password } = req.body;
-    const { accessToken, refreshToken } = await authService.login(email, password);
+    const input = loginInputDTO(req.body);
+    const { accessToken, refreshToken } = await authService.login(input.email, input.password);
     res.status(200).json({
         success: true,
-        data: { accessToken, refreshToken }
+        data: tokenOutputDTO({ accessToken, refreshToken })
     });
 });
 
@@ -17,7 +18,7 @@ const refreshToken = asyncHandler(async (req, res) => {
     const accessToken = await authService.refreshAccessToken(refreshToken);
     res.status(200).json({
         success: true,
-        data: { accessToken }
+        data: tokenOutputDTO({ accessToken })
     });
 });
 
