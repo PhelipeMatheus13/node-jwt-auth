@@ -1,7 +1,7 @@
 const asyncHandler = require("../../../../src/shared/utils/async.util");
 const { internal } = require("../../../../src/shared/errors/errors");
 
-describe("asyncHandler", () => {
+describe("asyncHandler (Unit)", () => {
     it("should call next with the error when the wrapped function throws a custom error", async () => {
         const customError = internal({ message: "Something went wrong" });
         const handler = asyncHandler(async () => { throw customError; });

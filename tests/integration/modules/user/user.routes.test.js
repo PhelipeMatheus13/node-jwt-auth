@@ -87,7 +87,7 @@ describe("User Routes (Integration)", () => {
                 name: "Test User",
                 email: "test@example.com"
             });
-            expect(res.body.data.password).toBeUndefined();
+            expect(res.body.data.password).toBeUndefined(); // password should not be returned
         });
 
         it("should return 401 when no token is provided", async () => {

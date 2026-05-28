@@ -62,7 +62,6 @@ describe("User Service (Unit)", () => {
 
     describe("findUserById", () => {
         const userId = "uuid-123";
-        const userResponse = { id: userId, name: "Test", email: "test@example.com" };
 
         it("should throw an error if repository.findById fails", async () => {
             userRepository.findById.mockRejectedValue(new Error("fake error"));
@@ -84,15 +83,19 @@ describe("User Service (Unit)", () => {
                 });
         });
 
-        it("should return user without password", async () => {
+        it("should return user", async () => {
             userRepository.findById.mockResolvedValue({
                 id: userId, name: "Test", email: "test@example.com", password: "secret"
             });
 
             const result = await userService.findUserById(userId);
 
-            expect(result).toEqual(userResponse);
-            expect(result.password).toBeUndefined();
+            expect(result).toEqual({
+                id: userId, 
+                name: "Test", 
+                email: "test@example.com", 
+                password: "secret"
+            });
         });
 
     });

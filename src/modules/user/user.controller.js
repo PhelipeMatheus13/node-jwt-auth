@@ -1,10 +1,11 @@
 const asyncHandler = require("../../shared/utils/async.util");
 const userService = require("./user.service");
 const {badRequest} = require("../../shared/errors/errors");
+const { registerInputDTO, userOutputDTO } = require("./user.dtos");
 
 const register = asyncHandler(async (req, res) => {
-    const { name, email, password } = req.body;
-    await userService.createUser({ name, email, password });
+    const input = registerInputDTO(req.body);
+    await userService.createUser(input);
     res.status(201).json({
         success: true,
         message: 'User created successfully'
@@ -18,7 +19,7 @@ const getUser = asyncHandler(async (req, res) =>  {
     const user = await userService.findUserById(id);
     res.status(200).json({
         success: true,
-        data: user,
+        data: userOutputDTO(user),
     });
 });
 
