@@ -1,5 +1,5 @@
 const asyncHandler = require("../../shared/utils/async.util");
-const authService = require("./services/auth.service");
+const authService = require("./auth.service");
 const { badRequest } = require("../../shared/errors/errors");
 const { loginInputDTO, tokenOutputDTO } = require("./auth.dtos");
 

@@ -1,14 +1,14 @@
-const authService = require("../../../../../src/modules/auth/services/auth.service");
+const authService = require("../../../../src/modules/auth/auth.service");
 
-jest.mock("../../../../../src/shared/services/hash.service");
-jest.mock("../../../../../src/modules/user/user.service"); 
-jest.mock("../../../../../src/modules/auth/services/jwt.service");
-jest.mock("../../../../../src/modules/token/token.service");
+const hashService = require("../../../../src/shared/services/hash.service");
+const userService = require("../../../../src/modules/user/user.service");
+const jwtService = require("../../../../src/shared/services/jwt.service");
+const tokenService = require("../../../../src/modules/token/token.service");
 
-const hashService = require("../../../../../src/shared/services/hash.service");
-const userService = require("../../../../../src/modules/user/user.service");
-const jwtService = require("../../../../../src/modules/auth/services/jwt.service");
-const tokenService = require("../../../../../src/modules/token/token.service");
+jest.mock("../../../../src/shared/services/hash.service");
+jest.mock("../../../../src/modules/user/user.service"); 
+jest.mock("../../../../src/shared/services/jwt.service");
+jest.mock("../../../../src/modules/token/token.service");
 
 
 describe("Auth Service (Unit)", () => {
@@ -17,8 +17,8 @@ describe("Auth Service (Unit)", () => {
     });
 
     describe("login", () => {
-        const userData = { id: "uuid-123", email: "test@example.com", password: "hashedPassword" };
-        const decodedToken = { id: "uuid-123", exp: Math.floor(Date.now() / 1000) + (60 * 60) };
+        const userData = { id: "uuid-123", email: "test@example.com", password: "hashedPassword", role: "user" };
+        const decodedToken = { id: "uuid-123", role: "user", exp: Math.floor(Date.now() / 1000) + (60 * 60) };
 
         it("should throw if fail in user retrieval", async () => {
             userService.findUserByEmailWithPassword.mockRejectedValue(new Error("fake error"));
@@ -76,8 +76,8 @@ describe("Auth Service (Unit)", () => {
 
             const result = await authService.login("test@example.com", "testPassword@123");
 
-            expect(jwtService.generateAccessToken).toHaveBeenCalledWith("uuid-123");
-            expect(jwtService.generateRefreshToken).toHaveBeenCalledWith("uuid-123");
+            expect(jwtService.generateAccessToken).toHaveBeenCalledWith("uuid-123", "user");
+            expect(jwtService.generateRefreshToken).toHaveBeenCalledWith("uuid-123", "user");
             expect(jwtService.decodeRefreshToken).toHaveBeenCalledWith("refresh-token");
             expect(hashService.hash).toHaveBeenCalledWith("refresh-token");
             expect(tokenService.saveRefreshToken).toHaveBeenCalledWith({
@@ -93,7 +93,7 @@ describe("Auth Service (Unit)", () => {
 
     describe("refreshAccessToken", () => {
         const refreshToken = "valid-refresh-token";
-        const decodedToken = { id: "uuid-123", exp: Math.floor(Date.now() / 1000) + (60 * 60) };
+        const decodedToken = { id: "uuid-123", role: "user", exp: Math.floor(Date.now() / 1000) + (60 * 60) };
 
         it("should throw error if fail to decode refresh token", async () => {
             jwtService.decodeRefreshToken.mockImplementation(() => {
@@ -160,14 +160,15 @@ describe("Auth Service (Unit)", () => {
             expect(tokenService.listRefreshTokensByUserId).toHaveBeenCalledWith(decodedToken.id);
             expect(hashService.compare).toHaveBeenCalledWith(refreshToken, "hash-token-123");
             expect(hashService.compare).toHaveBeenCalledWith(refreshToken, "hash-token-456");
-            expect(jwtService.generateAccessToken).toHaveBeenCalledWith(decodedToken.id);
+            expect(jwtService.generateAccessToken).toHaveBeenCalledWith(decodedToken.id, decodedToken.role);
+            
             expect(result).toBe("new-access-token");
         });
     });
 
     describe("logout", () => {
         const refreshToken = "valid-refresh-token";
-        const decodedToken = { id: "uuid-123", exp: Math.floor(Date.now() / 1000) + (60 * 60) };
+        const decodedToken = { id: "uuid-123", role: "user", exp: Math.floor(Date.now() / 1000) + (60 * 60) };
 
         it("should throw error if fail to decode refresh token", async () => {
             jwtService.decodeRefreshToken.mockImplementation(() => {
@@ -239,7 +240,7 @@ describe("Auth Service (Unit)", () => {
 
     describe("logoutAll", () => {
         const refreshToken = "valid-refresh-token";
-        const decodedToken = { id: "uuid-123", exp: Math.floor(Date.now() / 1000) + (60 * 60) };
+        const decodedToken = { id: "uuid-123", role: "user", exp: Math.floor(Date.now() / 1000) + (60 * 60) };
 
         it("should throw error if fail to decode refresh token", async () => {
             jwtService.decodeRefreshToken.mockImplementation(() => {
