@@ -1,13 +1,13 @@
 const userController = require("../../../../src/modules/user/user.controller");
+const userService = require("../../../../src/modules/user/user.service");
 
 jest.mock("../../../../src/modules/user/user.service");
-const userService = require("../../../../src/modules/user/user.service");
 
 describe("User Controller (Unit)", () => {
     let req, res, next;
 
     beforeEach(() => {
-        req = { body: {}, params: {} };
+        req = { body: {}, params: {} , user: {} };
         res = {
             status: jest.fn().mockReturnThis(),
             json: jest.fn().mockReturnThis(),
@@ -40,7 +40,9 @@ describe("User Controller (Unit)", () => {
     describe("getUser", () => {
         it("should return 200 with user data if id is provided", async () => {
             req.params.id = "uuid-123";
-            const mockUser = { id: "uuid-123", name: "Test", email: "test@example.com" };
+            req.user.id = "uuid-123";
+            req.user.role = "user";
+            const mockUser = { id: "uuid-123", name: "Test", email: "test@example.com", role: "user" };
             userService.findUserById.mockResolvedValue(mockUser);
 
             await userController.getUser(req, res, next);

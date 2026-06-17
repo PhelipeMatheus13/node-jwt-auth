@@ -2,7 +2,7 @@ const request = require("supertest");
 const app = require("../../../../src/app");
 const { setupTestDatabase } = require("../../../helpers/testDatabase");
 const { setKnexInstance } = require("../../../../src/shared/config/database");
-const jwtService = require("../../../../src/modules/auth/services/jwt.service");
+const jwtService = require("../../../../src/shared/services/jwt.service");
 
 describe("User Routes (Integration)", () => {
     let db, knex, userId, accessToken;
@@ -72,7 +72,7 @@ describe("User Routes (Integration)", () => {
                 .returning("*");
 
             userId = user.id;
-            accessToken = jwtService.generateAccessToken(userId);
+            accessToken = jwtService.generateAccessToken(userId, "user");
         });
 
         it("should return user data with valid token", async () => {
