@@ -28,7 +28,7 @@ const existsByEmail = async(email) => {
 const findByEmail = async(email) => {
     const knex = getKnex();
     return knex("users")
-        .select("id", "name", "email", "password", "created_at", "updated_at")
+        .select("id", "name", "email", "password", "role", "created_at", "updated_at")
         .where({email: email})
         .first();
 };
@@ -36,7 +36,7 @@ const findByEmail = async(email) => {
 const findById = async(id) => {
     const knex = getKnex();
     return knex("users")
-        .select("id", "name", "email", "password", "created_at", "updated_at")
+        .select("id", "name", "email", "password", "role", "created_at", "updated_at")
         .where({id: id})
         .first();
 };

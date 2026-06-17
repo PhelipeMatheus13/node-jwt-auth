@@ -18,12 +18,14 @@ const registerInputDTO = (body) => ({
  * @param {string} user.email
  * @param {string} user.created_at
  * @param {string} user.updated_at
- * @returns {{ id: string, name: string, email: string, createdAt: string, updatedAt: string }}
+ * @param {string} user.role
+ * @returns {{ id: string, name: string, email: string, role: string, createdAt: string, updatedAt: string }}
  */
 const userOutputDTO = (user) => ({
     id: user.id,
     name: user.name,
     email: user.email,
+    role: user.role,
     createdAt: user.created_at,
     updatedAt: user.updated_at,
 });

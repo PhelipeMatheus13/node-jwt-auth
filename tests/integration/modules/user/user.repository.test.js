@@ -34,7 +34,10 @@ describe("User Repository (Integration)", () => {
             expect(typeof userId).toBe("string");
 
             const user = await knex("users").where({ id: userId }).first();
-            expect(user).toMatchObject(userData);
+            expect(user.name).toBe("jhon doe");
+            expect(user.email).toBe("jhon@example.com");
+            expect(user.password).toBe("hashedpassword");
+            expect(user.role).toBe("user");
         });
     });
  
@@ -69,7 +72,10 @@ describe("User Repository (Integration)", () => {
             await knex("users").insert(userData);
 
             const user = await userRepository.findByEmail("jhon@example.com");
-            expect(user).toMatchObject(userData);
+            expect(user.name).toBe("jhon doe");
+            expect(user.email).toBe("jhon@example.com");
+            expect(user.password).toBe("hashedpassword");
+            expect(user.role).toBe("user");
         });
 
         it("should return null if a user with the given email does not exist", async () => {
@@ -91,7 +97,10 @@ describe("User Repository (Integration)", () => {
                 .returning("id");
 
             const user = await userRepository.findById(userId);
-            expect(user).toMatchObject({ ...userData, id: userId });
+            expect(user.name).toBe("jhon doe");
+            expect(user.email).toBe("jhon@example.com");
+            expect(user.password).toBe("hashedpassword");
+            expect(user.role).toBe("user");
         });
 
         it("should return null if a user with the given ID does not exist", async () => {

@@ -30,6 +30,7 @@ describe("User DTOs (Unit)", () => {
                 name: "John",
                 email: "john@example.com",
                 password: "secret",
+                role: "user",
                 created_at: "2025-01-01",
                 updated_at: "2025-01-02"
             };
@@ -40,6 +41,7 @@ describe("User DTOs (Unit)", () => {
                 id: "uuid-123",
                 name: "John",
                 email: "john@example.com",
+                role: "user",
                 createdAt: "2025-01-01",
                 updatedAt: "2025-01-02"
             });
