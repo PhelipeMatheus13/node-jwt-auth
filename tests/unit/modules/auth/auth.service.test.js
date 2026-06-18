@@ -21,14 +21,14 @@ describe("Auth Service (Unit)", () => {
         const decodedToken = { id: "uuid-123", role: "user", exp: Math.floor(Date.now() / 1000) + (60 * 60) };
 
         it("should throw if fail in user retrieval", async () => {
-            userService.findUserByEmailWithPassword.mockRejectedValue(new Error("fake error"));
+            userService.findUserByEmail.mockRejectedValue(new Error("fake error"));
 
             await expect(authService.login("test@example.com", "testPassword@123"))
                 .rejects.toThrow("fake error");
         });
 
         it("should throw if user does not exist", async () => {
-            userService.findUserByEmailWithPassword.mockResolvedValue(undefined); // knex return undefined
+            userService.findUserByEmail.mockResolvedValue(undefined); // knex return undefined
 
             await expect(authService.login("test@example.com", "testPassword@123"))
                 .rejects.toMatchObject({
@@ -40,7 +40,7 @@ describe("Auth Service (Unit)", () => {
 
 
         it("should throw if password does not match", async () => {
-            userService.findUserByEmailWithPassword.mockResolvedValue(userData);
+            userService.findUserByEmail.mockResolvedValue(userData);
             hashService.compare.mockResolvedValue(false);
 
             await expect(authService.login("test@example.com", "wrongPassword"))
@@ -52,7 +52,7 @@ describe("Auth Service (Unit)", () => {
         });
 
         it("should throw if fail in save refresh token", async () => {
-            userService.findUserByEmailWithPassword.mockResolvedValue(userData);
+            userService.findUserByEmail.mockResolvedValue(userData);
             hashService.compare.mockResolvedValue(true);
             jwtService.generateAccessToken.mockReturnValue("access-token");
             jwtService.generateRefreshToken.mockReturnValue("refresh-token");
@@ -65,7 +65,7 @@ describe("Auth Service (Unit)", () => {
         });   
         
         it("should login successfully", async () => {
-            userService.findUserByEmailWithPassword.mockResolvedValue(userData);
+            userService.findUserByEmail.mockResolvedValue(userData);
             hashService.compare.mockResolvedValue(true);
             jwtService.generateAccessToken.mockReturnValue("access-token");
             jwtService.generateRefreshToken.mockReturnValue("refresh-token");

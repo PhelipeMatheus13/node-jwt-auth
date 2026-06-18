@@ -101,4 +101,40 @@ describe("User Routes (Integration)", () => {
             });
         });
     });
+
+    describe("DELETE /users/:id", () => {
+        beforeEach(async () => {
+            const [user] = await knex("users")
+                .insert({
+                    name: "Test User",
+                    email: "test@example.com",
+                    password: "hashedpass"
+                })
+                .returning("*");
+
+            userId = user.id;
+            accessToken = jwtService.generateAccessToken(userId, "user");
+        });
+
+        it("should delete user with valid token", async () => {
+            const res = await request(app)
+                .delete(`/users/${userId}`)
+                .set("Authorization", `Bearer ${accessToken}`);
+
+            expect(res.statusCode).toBe(200);
+            expect(res.body.success).toBe(true);
+            expect(res.body.message).toBe('User deleted successfully');
+        });
+
+        it("should return 401 when no token is provided", async () => {
+            const res = await request(app).delete(`/users/${userId}`);
+
+            expect(res.statusCode).toBe(401);
+            expect(res.body.success).toBe(false);
+            expect(res.body.error).toEqual({
+                code: "UNAUTHORIZED",
+                message: "Access denied"
+            });
+        });
+    });
 });

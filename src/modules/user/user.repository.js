@@ -14,6 +14,13 @@ const create = async (userData) => {
     return response.id;
 };
 
+const deleteById = async (id) => {
+    const knex = getKnex();
+    return knex("users")
+        .where({ id })
+        .del();
+};
+
 // Reader
 const existsByEmail = async(email) => {
     const knex = getKnex();
@@ -23,7 +30,7 @@ const existsByEmail = async(email) => {
         .first();
 
     return !!result;
-}
+};
 
 const findByEmail = async(email) => {
     const knex = getKnex();
@@ -44,8 +51,9 @@ const findById = async(id) => {
 module.exports = {
     // Writer
     create,
+    deleteById,
     // Reader
     existsByEmail,
     findByEmail,
-    findById,
+    findById
 };

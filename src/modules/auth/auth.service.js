@@ -7,7 +7,7 @@ const {unauthorized, notFound} = require("../../shared/errors/errors");
 
 const login = async (email, password) => {
     // Find user by email, including password hash for validation
-    const user = await userService.findUserByEmailWithPassword(email);
+    const user = await userService.findUserByEmail(email);
  
     // For security reasons, any errors will be treated as invalid here
     if (!user || !(await hashService.compare(password, user.password))) {

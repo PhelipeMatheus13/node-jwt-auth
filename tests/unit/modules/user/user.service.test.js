@@ -100,32 +100,62 @@ describe("User Service (Unit)", () => {
 
     });
 
-    describe("findUserByEmailWithPassword", () => {
+    describe("findUserByEmail", () => {
         const email = "test@example.com";
         const userResponse = { id: "uuid-123", name: "Test", email: email, password: "hashed" };
         it("should throw an error if repository.findByEmail fails", async () => {
             userRepository.findByEmail.mockRejectedValue(new Error("fake error"));
 
-            await expect(userService.findUserByEmailWithPassword(email)).rejects.toThrow("fake error");
+            await expect(userService.findUserByEmail(email)).rejects.toThrow("fake error");
         });
 
-        it("should return user with password", async () => {
+        it("should return user", async () => {
             userRepository.findByEmail.mockResolvedValue(userResponse);
 
-            const result = await userService.findUserByEmailWithPassword(email);
+            const result = await userService.findUserByEmail(email);
             expect(result).toEqual(userResponse);
         });
 
         it("should throw NOT_FOUND error if user does not exist", async () => {
             userRepository.findByEmail.mockResolvedValue(undefined); // knex returns undefined
 
-            await expect(userService.findUserByEmailWithPassword(email))
+            await expect(userService.findUserByEmail(email))
                 .rejects.toMatchObject({
                     statusCode: 404,
                     code: "NOT_FOUND",
                     message: "User not found",
                     isOperational: true,
                 });
+        });
+    });
+
+    describe("deleteUserById", () => {
+        const userId = "uuid-123";
+        it("should throw an error if repository.deleteById fails", async () => {
+            userRepository.deleteById.mockRejectedValue(new Error("fake error"));
+
+            await expect(userService.deleteUserById(userId)).rejects.toThrow("fake error");
+        });
+
+        it("should throw an error if user does not exist", async () => {
+            userRepository.deleteById.mockResolvedValue(0);
+
+            await expect(userService.deleteUserById(userId)).rejects.toMatchObject({
+                statusCode: 404,
+                code: "NOT_FOUND",
+                message: "User not found",
+                isOperational: true,
+            });
+        });
+
+        it("should delete user by ID", async () => {
+            userRepository.deleteById.mockResolvedValue(1);
+
+            await expect(
+                userService.deleteUserById(userId)
+            ).resolves.toBeUndefined();
+
+            expect(userRepository.deleteById).toHaveBeenCalledWith(userId);
         });
     });
 });

@@ -28,7 +28,23 @@ const getUser = asyncHandler(async (req, res) =>  {
     });
 });
 
+const deleteUser = asyncHandler(async (req, res) => {
+    const id = req.params.id;
+    if (!id) throw badRequest({ message: "User ID is required" });
+
+    if (req.user.role !== 'admin' && req.user.id !== id) {
+        throw forbidden({ message: "You can only access your own data" });
+    }
+
+    await userService.deleteUserById(id);
+    res.status(200).json({
+        success: true,
+        message: 'User deleted successfully'
+    });
+});
+
 module.exports = {
     register,
     getUser,
+    deleteUser
 }

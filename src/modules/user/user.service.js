@@ -21,15 +21,23 @@ const findUserById = async (id) => {
     return user;
 };
 
-// sensitive function, returns the password hash.
-const findUserByEmailWithPassword = async (email) => {
+const findUserByEmail = async (email) => {
     const user = await userRepository.findByEmail(email);
     if (!user) throw notFound({ message: "User not found" });
     return user;
 };
 
+const deleteUserById = async (id) => {
+    const deletedRows = await userRepository.deleteById(id);
+
+    if (deletedRows === 0) {
+        throw notFound({ message: "User not found" });
+    }
+};
+
 module.exports =  {
     createUser,
     findUserById,
-    findUserByEmailWithPassword,
+    findUserByEmail,
+    deleteUserById
 };
