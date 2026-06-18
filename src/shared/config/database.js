@@ -17,6 +17,9 @@ const configurations = {
         migrations: {
             directory: "./database/migrations",
         },
+        seeds: {
+            directory: "./database/seeds",
+        },
     },
     test: {
         client: "pg",
