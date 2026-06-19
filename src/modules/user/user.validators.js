@@ -1,6 +1,12 @@
 const { body, validationResult } = require("express-validator");
 const {unprocessable} = require("../../shared/errors/errors");
 
+/**
+ * Request validation middleware for user registration.
+ *
+ * Validates the required fields and returns validation errors
+ * if any input does not meet the expected criteria.
+ */
 const validateRegister = [
     body("name")
         .notEmpty().withMessage("Name is required")

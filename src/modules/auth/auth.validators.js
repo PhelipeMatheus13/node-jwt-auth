@@ -2,7 +2,12 @@ const { body, validationResult } = require("express-validator");
 const {unprocessable} = require("../../shared/errors/errors");
 
 
-// Validations for user login
+/**
+ * Request validation middleware for user login.
+ *
+ * Validates the required credentials and returns validation
+ * errors if the request is invalid.
+ */
 const validateLogin = [
     body("email")
         .notEmpty().withMessage("Email is required")

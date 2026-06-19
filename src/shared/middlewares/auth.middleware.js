@@ -1,7 +1,14 @@
-const jwt = require("jsonwebtoken");
-const { unauthorized } = require("../../shared/errors/errors");
+const jwt = require("../services/jwt.service");
+const { unauthorized, forbidden } = require("../../shared/errors/errors");
 
-function checkToken(req, res, next) {
+/**
+ * JWT authentication middleware.
+ *
+ * Validates the access token from the Authorization header.
+ * If the token is valid, attaches the user information to `req.user`.
+ * Otherwise, throws a 401 Unauthorized error.
+ */
+const checkToken = (req, res, next) => {
     const authHeader = req.headers["authorization"];
     const token = authHeader && authHeader.split(" ")[1];
 
@@ -10,17 +17,32 @@ function checkToken(req, res, next) {
     }
 
     try {
-        // Verify token
-        const secret = process.env.SECRET;
-        jwt.verify(token, secret);
-        next(); // Continue to the next middleware or route handler
+        const decoded = jwt.decodeAccessToken(token);
+        req.user = { id: decoded.id, role: decoded.role };
+        next();
     } catch (err) {
         console.log(err);
-        if (err.name === 'TokenExpiredError') {
-           return next(unauthorized({ message: "Invalid expired", code: "TOKEN_EXPIRED" }));
-        }
-        return next(unauthorized({ message: "Invalid token", code: "INVALID_TOKEN" }));
+        next(err);
     }
 }
 
-module.exports = checkToken;
+/**
+ * Role-based authorization middleware.
+ *
+ * It receives a list of allowed functions and checks if the user...
+ * authenticated (`req.user`) has one of them. 
+ * Otherwise throws an access denied error (403 Forbidden).
+ *
+ * @param {...string} roles - Functions authorized to access a route.
+ */
+const authorize = (...roles) => (req, res, next) => {
+    if (!req.user || !roles.includes(req.user.role)) {
+        throw forbidden({ message: "Access denied" });
+    }
+    next();
+};
+
+module.exports = {
+    checkToken,
+    authorize
+};

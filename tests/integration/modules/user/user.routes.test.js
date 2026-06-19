@@ -2,7 +2,7 @@ const request = require("supertest");
 const app = require("../../../../src/app");
 const { setupTestDatabase } = require("../../../helpers/testDatabase");
 const { setKnexInstance } = require("../../../../src/shared/config/database");
-const jwtService = require("../../../../src/modules/auth/services/jwt.service");
+const jwtService = require("../../../../src/shared/services/jwt.service");
 
 describe("User Routes (Integration)", () => {
     let db, knex, userId, accessToken;
@@ -72,7 +72,7 @@ describe("User Routes (Integration)", () => {
                 .returning("*");
 
             userId = user.id;
-            accessToken = jwtService.generateAccessToken(userId);
+            accessToken = jwtService.generateAccessToken(userId, "user");
         });
 
         it("should return user data with valid token", async () => {
@@ -92,6 +92,42 @@ describe("User Routes (Integration)", () => {
 
         it("should return 401 when no token is provided", async () => {
             const res = await request(app).get(`/users/${userId}`);
+
+            expect(res.statusCode).toBe(401);
+            expect(res.body.success).toBe(false);
+            expect(res.body.error).toEqual({
+                code: "UNAUTHORIZED",
+                message: "Access denied"
+            });
+        });
+    });
+
+    describe("DELETE /users/:id", () => {
+        beforeEach(async () => {
+            const [user] = await knex("users")
+                .insert({
+                    name: "Test User",
+                    email: "test@example.com",
+                    password: "hashedpass"
+                })
+                .returning("*");
+
+            userId = user.id;
+            accessToken = jwtService.generateAccessToken(userId, "user");
+        });
+
+        it("should delete user with valid token", async () => {
+            const res = await request(app)
+                .delete(`/users/${userId}`)
+                .set("Authorization", `Bearer ${accessToken}`);
+
+            expect(res.statusCode).toBe(200);
+            expect(res.body.success).toBe(true);
+            expect(res.body.message).toBe('User deleted successfully');
+        });
+
+        it("should return 401 when no token is provided", async () => {
+            const res = await request(app).delete(`/users/${userId}`);
 
             expect(res.statusCode).toBe(401);
             expect(res.body.success).toBe(false);

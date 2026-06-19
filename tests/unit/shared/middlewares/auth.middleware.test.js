@@ -1,7 +1,7 @@
-const checkToken = require("../../../../src/shared/middlewares/auth.middleware");
-const jwt = require("jsonwebtoken");
+const {checkToken, authorize} = require("../../../../src/shared/middlewares/auth.middleware");
+const jwtService = require("../../../../src/shared/services/jwt.service");
 
-jest.mock("jsonwebtoken");
+jest.mock("../../../../src/shared/services/jwt.service");
 
 describe("Auth Middleware (Unit)", () => {
     let req, res, next;
@@ -26,61 +26,83 @@ describe("Auth Middleware (Unit)", () => {
         jest.clearAllMocks();
     });
 
-    it("should call next with unauthorized error if no token provided", () => {
-        checkToken(req, res, next);
-        expect(next).toHaveBeenCalledWith(
-            expect.objectContaining({
-                statusCode: 401,
-                code: "UNAUTHORIZED",
-                message: "Access denied",
-            })
-        );
+    describe("checkToken", () => {
+        it("should call next with unauthorized error if no token provided", () => {
+            checkToken(req, res, next);
+            expect(next).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    statusCode: 401,
+                    code: "UNAUTHORIZED",
+                    message: "Access denied",
+                })
+            );
+        });
+
+        it("should pass decode errors to next", () => {
+            req.headers.authorization = "Bearer invalid.token";
+            const err = new Error("decode failed");
+
+            jwtService.decodeAccessToken.mockImplementation(() => {
+                throw err;
+            });
+
+            checkToken(req, res, next);
+            expect(next).toHaveBeenCalledWith(err);
+        });
+
+        it("should extract token correctly", () => {
+            req.headers.authorization = "Bearer valid.token";
+            jwtService.decodeAccessToken.mockReturnValue({ id: "uuid", role: "user" });
+
+            checkToken(req, res, next);
+            expect(jwtService.decodeAccessToken).toHaveBeenCalledWith("valid.token");
+            expect(req.user).toEqual({
+                id: "uuid",
+                role: "user",
+            });
+            expect(next).toHaveBeenCalledWith();
+        });
     });
 
-    it("should call next with unauthorized if token is expired", () => {
-        req.headers.authorization = "Bearer expired.token";
-        const err = new Error("expired");
-        err.name = "TokenExpiredError";
-        jwt.verify.mockImplementation(() => { throw err; });
+    describe("authorize", () => {
+        it("should call next if user role is allowed", () => {
+            const middleware = authorize("admin", "user");
+            req.user = { id: "uuid-123", role: "user" };
 
-        checkToken(req, res, next);
-        expect(next).toHaveBeenCalledWith(
-            expect.objectContaining({
-                statusCode: 401,
-                code: "TOKEN_EXPIRED",
-                message: "Invalid expired",
-            })
-        );
-    });
+            middleware(req, res, next);
 
-    it("should call next with unauthorized if token is invalid", () => {
-        req.headers.authorization = "Bearer invalid.token";
-        jwt.verify.mockImplementation(() => { throw new Error("invalid signature"); });
+            expect(next).toHaveBeenCalled();
+            expect(next).toHaveBeenCalledWith();
+        });
+        
+       it("should throw forbidden if user role is not allowed", () => {
+            const middleware = authorize("admin");
+            req.user = { id: "uuid-123", role: "user" };
 
-        checkToken(req, res, next);
-        expect(next).toHaveBeenCalledWith(
-            expect.objectContaining({
-                statusCode: 401,
-                code: "INVALID_TOKEN",
-                message: "Invalid token",
-            })
-        );
-    });
+            expect(() => middleware(req, res, next)).toThrow(
+                expect.objectContaining({
+                    statusCode: 403,
+                    code: "FORBIDDEN",
+                    message: "Access denied",
+                })
+            );
 
-    it("should call next without arguments when token is valid", () => {
-        req.headers.authorization = "Bearer valid.token";
-        jwt.verify.mockReturnValue({ id: "user-uuid" });
+            expect(next).not.toHaveBeenCalled();
+        });
 
-        checkToken(req, res, next);
-        expect(next).toHaveBeenCalledWith(); // sem erro
-    });
+        it("should throw forbidden if req.user is missing", () => {
+            const middleware = authorize("admin");
+            req.user = undefined;
 
-    it("should extract token correctly", () => {
-        req.headers.authorization = "Bearer abc.def.ghi";
-        jwt.verify.mockReturnValue({ id: "uuid" });
+            expect(() => middleware(req, res, next)).toThrow(
+                expect.objectContaining({
+                    statusCode: 403,
+                    code: "FORBIDDEN",
+                    message: "Access denied",
+                })
+            );
 
-        checkToken(req, res, next);
-        expect(jwt.verify).toHaveBeenCalledWith("abc.def.ghi", "secret");
-        expect(next).toHaveBeenCalledWith();
+            expect(next).not.toHaveBeenCalled();
+        });
     });
 });

@@ -1,13 +1,13 @@
-const hashService = require("../../../shared/services/hash.service");
-const jwtService = require("./jwt.service");
-const userService = require("../../user/user.service");
-const tokenService = require("../../token/token.service");
-const {unauthorized, notFound} = require("../../../shared/errors/errors");
+const hashService = require("../../shared/services/hash.service");
+const jwtService = require("../../shared/services/jwt.service");
+const userService = require("../user/user.service");
+const tokenService = require("../token/token.service");
+const {unauthorized, notFound} = require("../../shared/errors/errors");
 
 
 const login = async (email, password) => {
     // Find user by email, including password hash for validation
-    const user = await userService.findUserByEmailWithPassword(email);
+    const user = await userService.findUserByEmail(email);
  
     // For security reasons, any errors will be treated as invalid here
     if (!user || !(await hashService.compare(password, user.password))) {
@@ -17,8 +17,8 @@ const login = async (email, password) => {
         });
     }
 
-    const accessToken = jwtService.generateAccessToken(user.id);
-    const refreshToken = jwtService.generateRefreshToken(user.id);
+    const accessToken = jwtService.generateAccessToken(user.id, user.role);
+    const refreshToken = jwtService.generateRefreshToken(user.id, user.role);
     const decoded = jwtService.decodeRefreshToken(refreshToken);
     // hash refresh token before saving in database
     const hashedToken = await hashService.hash(refreshToken);
@@ -38,8 +38,7 @@ const login = async (email, password) => {
 
 const refreshAccessToken = async (refreshToken) => {
     const decoded = jwtService.decodeRefreshToken(refreshToken);
-    const userId = decoded.id;
-    const hashes = await tokenService.listRefreshTokensByUserId(userId);
+    const hashes = await tokenService.listRefreshTokensByUserId(decoded.id);
 
     if (!hashes.length) {
         throw notFound({ message: "Refresh token not found", code: "TOKEN_NOT_FOUND" });
@@ -57,14 +56,13 @@ const refreshAccessToken = async (refreshToken) => {
         throw notFound({ message: "Refresh token not found", code: "TOKEN_NOT_FOUND" });
     }
 
-    return jwtService.generateAccessToken(decoded.id);
+    return jwtService.generateAccessToken(decoded.id, decoded.role);
 };
 
 
 const logout = async (refreshToken) => {
     const decoded = jwtService.decodeRefreshToken(refreshToken);
-    const userId = decoded.id;
-    const hashes = await tokenService.listRefreshTokensByUserId(userId);
+    const hashes = await tokenService.listRefreshTokensByUserId(decoded.id);
 
     if (!hashes.length) {
         throw notFound({ message: "Refresh token not found", code: "TOKEN_NOT_FOUND" });
@@ -87,8 +85,7 @@ const logout = async (refreshToken) => {
 
 const logoutAll = async (refreshToken) => {
     const decoded = jwtService.decodeRefreshToken(refreshToken);
-    const userId = decoded.id;
-    const hashes = await tokenService.listRefreshTokensByUserId(userId);
+    const hashes = await tokenService.listRefreshTokensByUserId(decoded.id);
 
     if (!hashes.length) {
         throw notFound({ message: "Refresh token not found", code: "TOKEN_NOT_FOUND" });
@@ -106,7 +103,7 @@ const logoutAll = async (refreshToken) => {
         throw notFound({ message: "Refresh token not found", code: "TOKEN_NOT_FOUND" });
     }
 
-    return tokenService.revokeAllRefreshTokensByUserId(userId);
+    return tokenService.revokeAllRefreshTokensByUserId(decoded.id);
 };
 
 module.exports = {
