@@ -3,6 +3,7 @@ const jwtService = require("../../shared/services/jwt.service");
 const userService = require("../user/user.service");
 const tokenService = require("../token/token.service");
 const {unauthorized, notFound} = require("../../shared/errors/errors");
+const { getKnex } = require("../../shared/config/database"); 
 
 
 const login = async (email, password) => {
@@ -36,29 +37,46 @@ const login = async (email, password) => {
 };
 
 
-const refreshAccessToken = async (refreshToken) => {
-    const decoded = jwtService.decodeRefreshToken(refreshToken);
+const rotateTokens = async (oldRefreshToken) => {
+    const decoded = jwtService.decodeRefreshToken(oldRefreshToken);
     const hashes = await tokenService.listRefreshTokensByUserId(decoded.id);
 
     if (!hashes.length) {
         throw notFound({ message: "Refresh token not found", code: "TOKEN_NOT_FOUND" });
     }
 
-    let match = false;
+    let matchedRecord = null;
     for (const record of hashes) {
-        if (await hashService.compare(refreshToken, record.token)) {
-            match = true;
+        if (await hashService.compare(oldRefreshToken, record.token)) {
+            matchedRecord = record;
             break;
         }
     }
 
-    if (!match) {
+    if (!matchedRecord) {
         throw notFound({ message: "Refresh token not found", code: "TOKEN_NOT_FOUND" });
     }
 
-    return jwtService.generateAccessToken(decoded.id, decoded.role);
-};
+    // Generate new tokens
+    const newAccessToken = jwtService.generateAccessToken(decoded.id, decoded.role);
+    const newRefreshToken = jwtService.generateRefreshToken(decoded.id, decoded.role);
+    const newRefreshDecoded = jwtService.decodeRefreshToken(newRefreshToken);
+    const newRefreshTokenHash = await hashService.hash(newRefreshToken);
 
+    const knex = getKnex();
+    await knex.transaction(async (trx) => {
+        await tokenService.revokeRefreshToken(matchedRecord.token, trx);
+
+        await tokenService.saveRefreshToken({
+            token: newRefreshTokenHash,
+            userId: newRefreshDecoded.id,
+            expiresAt: new Date(newRefreshDecoded.exp * 1000),
+        }, trx);
+    });
+
+    return { accessToken: newAccessToken, refreshToken: newRefreshToken };
+};
+ 
 
 const logout = async (refreshToken) => {
     const decoded = jwtService.decodeRefreshToken(refreshToken);
@@ -108,7 +126,7 @@ const logoutAll = async (refreshToken) => {
 
 module.exports = {
     login,
-    refreshAccessToken,
+    rotateTokens,
     logout,
     logoutAll,
 };
