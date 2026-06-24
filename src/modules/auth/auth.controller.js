@@ -12,13 +12,13 @@ const login = asyncHandler(async (req, res) => {
     });
 });
 
-const refreshToken = asyncHandler(async (req, res) => {
-    const { refreshToken } = req.body;
-    if (!refreshToken) throw badRequest({ message: "Refresh token is required" }); 
-    const accessToken = await authService.refreshAccessToken(refreshToken);
+const refresh = asyncHandler(async (req, res) => {
+   const { refreshToken: oldRefreshToken } = req.body;
+    if (!oldRefreshToken) throw badRequest({ message: "Refresh token is required" }); 
+    const { accessToken, refreshToken } = await authService.rotateTokens(oldRefreshToken);
     res.status(200).json({
         success: true,
-        data: tokenOutputDTO({ accessToken })
+        data: tokenOutputDTO({ accessToken, refreshToken })
     });
 });
 
@@ -44,7 +44,7 @@ const logoutAll = asyncHandler(async (req, res) => {
 
 module.exports = {
     login,
-    refreshToken,
+    refresh,
     logout,
     logoutAll
 };

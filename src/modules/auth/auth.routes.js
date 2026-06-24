@@ -5,7 +5,7 @@ const { validateLogin } = require("./auth.validators");
 
 // TODO: add swagger documentation for auth routes
 router.post("/login", validateLogin, authController.login);
-router.post("/refresh-token", authController.refreshToken);
+router.post("/refresh", authController.refresh);
 router.post("/logout", authController.logout);
 router.post("/logout-all", authController.logoutAll);
 

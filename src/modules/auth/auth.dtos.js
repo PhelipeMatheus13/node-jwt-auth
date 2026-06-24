@@ -12,14 +12,11 @@ const loginInputDTO = (body) => ({
 /**
  * @param {Object} tokens
  * @param {string} tokens.accessToken
- * @param {string} [tokens.refreshToken] - (optional) only include refreshToken if it's provided 
- * @returns {{ accessToken: string, refreshToken?: string }}
+ * @param {string} tokens.refreshToken
+ * @returns {{ accessToken: string, refreshToken: string }}
  */
 const tokenOutputDTO = (tokens) => {
-    const result = { accessToken: tokens.accessToken };
-    if (tokens.refreshToken !== undefined) {
-        result.refreshToken = tokens.refreshToken; 
-    }
+    const result = { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken };
     return result;
 };
 

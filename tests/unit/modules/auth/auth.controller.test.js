@@ -39,27 +39,30 @@ describe("Auth Controller (Unit)", () => {
         });
     });
 
-    describe("refreshToken", () => {
+    describe("refresh", () => {
         const body = {
             refreshToken: "test-refresh-token"
         }; 
 
         it("should return 200 and ne access token on successful refreshing Token", async () => {
             req.body = body;
-            authService.refreshAccessToken.mockResolvedValue("test-access-token")
-            await authController.refreshToken(req, res, next);
+            authService.rotateTokens.mockResolvedValue({
+                accessToken: "access-token",
+                refreshToken: "refresh-token"
+            });
+            await authController.refresh(req, res, next);
 
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith({
                 success: true,
-                data: { accessToken: "test-access-token" }
+                data: { accessToken: "access-token", refreshToken: "refresh-token" }
             });
             expect(next).not.toHaveBeenCalled();
         });
         
         it("should return 400 if Refresh token is invalid", async () => {
             req.body = {};
-            await authController.refreshToken(req, res, next);
+            await authController.refresh(req, res, next);
 
             expect(next).toHaveBeenCalledWith(expect.objectContaining({
                 statusCode: 400,
@@ -68,7 +71,7 @@ describe("Auth Controller (Unit)", () => {
             }));
         });
     });
-
+ 
     describe("logout", () => {
         const body = {
             refreshToken: "test-refresh-token"

@@ -60,7 +60,7 @@ describe("Auth Routes (Integration)", () => {
         });
     });
 
-    describe("POST /auth/refresh-token", () => {
+    describe("POST /auth/refresh", () => {
         let refreshToken;
 
         beforeEach(async () => {
@@ -82,7 +82,7 @@ describe("Auth Routes (Integration)", () => {
 
         it("should return a new access token", async () => {
             const res = await request(app)
-                .post("/auth/refresh-token")
+                .post("/auth/refresh")
                 .send({ refreshToken });
 
             expect(res.statusCode).toBe(200);
