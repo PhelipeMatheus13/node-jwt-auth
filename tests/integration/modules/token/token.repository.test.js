@@ -31,70 +31,75 @@ describe("Token Repository (Integration)", () => {
         userId = result[0].id;
     });
 
-    describe("create", () => {
-        it("should insert a new token into the database", async () => {
-            const tokenData = {
-                token: "test-token-123",
-                userId: userId,
-                expiresAt: new Date(Date.now() + 86400000) 
-            }
+    describe("Writer repository", () => {
+        describe("create", () => {
+            it("should insert a new token into the database", async () => {
+                const tokenData = {
+                    token: "test-token-123",
+                    userId: userId,
+                    expiresAt: new Date(Date.now() + 86400000) 
+                }
 
-            const tokenId = await tokenRepository.create(tokenData);
+                const tokenId = await tokenRepository.create(tokenData);
 
-            expect(tokenId).toBeDefined();
-            expect(typeof tokenId).toBe("string");
+                expect(tokenId).toBeDefined();
+                expect(typeof tokenId).toBe("string");
 
-            const token = await knex("refresh_tokens").where({ id: tokenId }).first();
+                const token = await knex("refresh_tokens").where({ id: tokenId }).first();
 
-            expect(token).toMatchObject({
-                token: tokenData.token,
-                user_id: tokenData.userId,
-                expires_at: tokenData.expiresAt
+                expect(token).toMatchObject({
+                    token: tokenData.token,
+                    user_id: tokenData.userId,
+                    expires_at: tokenData.expiresAt
+                });
             });
         });
-    });
 
-    describe("deleteByToken", () => {
-        it("should remove the token", async () => {
-            await knex("refresh_tokens").insert({
-                token: "test-token-123",
-                user_id: userId,
-                expires_at: new Date(Date.now() + 86400000) 
-            });
-
-            await tokenRepository.deleteByToken("test-token-123");
-
-            const response = await knex("refresh_tokens").where({ token: "test-token-123" }).first();
-            expect(response).toBeUndefined();
-        });
-    });
-    
-    describe("deleteAllByUserId", () => {
-        it("should remove all tokens", async () => {
-            const now = Date.now();
-            const tokensData = [
-                {
+        describe("revokeByToken", () => {
+            it("should update the revoked_at field for a token", async () => {
+                const tokenData = {
                     token: "test-token-123",
                     user_id: userId,
-                    expires_at: new Date(now + 86400000),
-                    created_at: new Date(now - 10000) 
-                },
-                {
-                    token: "test-token-456",
-                    user_id: userId,
-                    expires_at: new Date(now + 86400000),
-                    created_at: new Date(now) 
-                }
-            ];
+                    expires_at: new Date(Date.now() + 86400000)
+                };
 
-            await knex("refresh_tokens").insert(tokensData);
+                const [{ id: tokenId }] = await knex("refresh_tokens").insert(tokenData).returning("id");
 
-            await tokenRepository.deleteAllByUserId(userId);
+                await tokenRepository.revokeByToken(tokenData.token);
 
-            const response = await knex("refresh_tokens").where({ user_id: userId }).first();
-            expect(response).toBeUndefined();
+                const token = await knex("refresh_tokens").select("revoked_at").where({ id: tokenId }).first();
+                expect(token.revoked_at).toBeDefined();
+            });
         });
-    }); 
+
+        describe("revokeAllByUserId", () => {
+            it("should update the revoked_at field for all tokens of a user", async () => {
+                const now = Date.now();
+                const tokensData = [
+                    {
+                        token: "test-token-123",
+                        user_id: userId,
+                        expires_at: new Date(now + 86400000),
+                        created_at: new Date(now - 10000) 
+                    },
+                    {
+                        token: "test-token-456",
+                        user_id: userId,
+                        expires_at: new Date(now + 86400000),
+                        created_at: new Date(now) 
+                    }
+                ];
+
+                await knex("refresh_tokens").insert(tokensData);
+                await tokenRepository.revokeAllByUserId(userId);
+
+                const tokens = await knex("refresh_tokens").select("revoked_at").where({ user_id: userId });
+                tokens.forEach(token => {
+                    expect(token.revoked_at).toBeDefined();
+                });
+            });
+        });
+    });
 
     describe("listByUserId", () => {
         it("should return tokens ordered by created_at desc", async () => {

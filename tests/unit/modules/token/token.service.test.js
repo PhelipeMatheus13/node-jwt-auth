@@ -20,38 +20,38 @@ describe("Token Service (Unit)", () => {
             tokenRepository.create.mockResolvedValue(1);
 
             await tokenService.saveRefreshToken(tokendata);
-            expect(tokenRepository.create).toHaveBeenCalledWith(tokendata);
+            expect(tokenRepository.create).toHaveBeenCalledWith(tokendata, null);
         });
     });
 
 
     describe("revokeRefreshToken", () => {
-        it("should throw an error if repository.deleteByToken fails", async () => {
-            tokenRepository.deleteByToken.mockRejectedValue(new Error("fake error"));
+        it("should throw an error if repository.revokeByToken fails", async () => {
+            tokenRepository.revokeByToken.mockRejectedValue(new Error("fake error"));
 
             await expect(tokenService.revokeRefreshToken("token")).rejects.toThrow("fake error");
         });
 
-        it("should call repository.deleteByToken", async () => {
-            tokenRepository.deleteByToken.mockResolvedValue(1);
+        it("should call repository.revokeByToken", async () => {
+            tokenRepository.revokeByToken.mockResolvedValue(1);
 
             await tokenService.revokeRefreshToken("token");
-            expect(tokenRepository.deleteByToken).toHaveBeenCalledWith("token");
+            expect(tokenRepository.revokeByToken).toHaveBeenCalledWith("token", null);
         });
     });
 
     describe("revokeAllRefreshTokensByUserId", () => {
-        it("should throw an error if repository.deleteAllByUserId fails", async () => {
-            tokenRepository.deleteAllByUserId.mockRejectedValue(new Error("fake error"));
+        it("should throw an error if repository.revokeAllByUserId fails", async () => {
+            tokenRepository.revokeAllByUserId.mockRejectedValue(new Error("fake error"));
 
             await expect(tokenService.revokeAllRefreshTokensByUserId("uuid-123")).rejects.toThrow("fake error");
         });
 
-        it("should call repository.deleteAllByUserId", async () => {
-            tokenRepository.deleteAllByUserId.mockResolvedValue(1);
+        it("should call repository.revokeAllByUserId", async () => {
+            tokenRepository.revokeAllByUserId.mockResolvedValue(1);
 
             await tokenService.revokeAllRefreshTokensByUserId("uuid-123");
-            expect(tokenRepository.deleteAllByUserId).toHaveBeenCalledWith("uuid-123");
+            expect(tokenRepository.revokeAllByUserId).toHaveBeenCalledWith("uuid-123");
         });
     });
 

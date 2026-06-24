@@ -1,8 +1,8 @@
 const { getKnex } = require("../../shared/config/database");
 
 // Writer
-const create = async (data) => {
-    const knex = getKnex();
+const create = async (data, trx = null) => {
+    const knex = trx || getKnex(); // Use the provided transaction or get a new knex instance
     const [response] = await knex("refresh_tokens")
         .insert({
             token: data.token,
@@ -14,19 +14,19 @@ const create = async (data) => {
     return response.id;
 };
 
-const deleteByToken = async (token) => {
-    const knex = getKnex();
+const revokeByToken = async (token, trx = null) => {
+    const knex = trx || getKnex();
     return knex("refresh_tokens")
         .where({token: token})
-        .del();
-};
+        .update({ revoked_at: knex.fn.now() });
+}
 
-const deleteAllByUserId = async (userId) => {
+const revokeAllByUserId = async (userId) => {
     const knex = getKnex();
     return knex("refresh_tokens")
         .where({user_id: userId})
-        .del();
-}
+        .update({ revoked_at: knex.fn.now() });
+};
 
 // Reader
 const listByUserId = async (userId) => {
@@ -41,8 +41,8 @@ const listByUserId = async (userId) => {
 module.exports = {
     // writer
     create,
-    deleteByToken,
-    deleteAllByUserId,
+    revokeByToken,
+    revokeAllByUserId,
     // reader
-    listByUserId,
+    listByUserId
 };
