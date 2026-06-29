@@ -2,6 +2,7 @@ const { setupTestDatabase } = require("../../../helpers/testDatabase");
 // Ensure the test database is set up before importing the repository
 const { setKnexInstance } = require("../../../../src/shared/config/database"); 
 const tokenRepository = require("../../../../src/modules/token/token.repository");
+const { randomUUID } = require("crypto");  
 
 describe("Token Repository (Integration)", () => {
     let db, knex, userId;
@@ -35,8 +36,9 @@ describe("Token Repository (Integration)", () => {
         describe("create", () => {
             it("should insert a new token into the database", async () => {
                 const tokenData = {
-                    token: "test-token-123",
+                    tokenHash: "token-hash-123",
                     userId: userId,
+                    jti: randomUUID(),
                     expiresAt: new Date(Date.now() + 86400000) 
                 }
 
@@ -48,24 +50,25 @@ describe("Token Repository (Integration)", () => {
                 const token = await knex("refresh_tokens").where({ id: tokenId }).first();
 
                 expect(token).toMatchObject({
-                    token: tokenData.token,
+                    token_hash: tokenData.tokenHash,
                     user_id: tokenData.userId,
                     expires_at: tokenData.expiresAt
                 });
             });
         });
 
-        describe("revokeByToken", () => {
+        describe("revokeById", () => {
             it("should update the revoked_at field for a token", async () => {
                 const tokenData = {
-                    token: "test-token-123",
+                    token_hash: "test-token-123",
                     user_id: userId,
+                    jti: randomUUID(),
                     expires_at: new Date(Date.now() + 86400000)
                 };
 
                 const [{ id: tokenId }] = await knex("refresh_tokens").insert(tokenData).returning("id");
 
-                await tokenRepository.revokeByToken(tokenData.token);
+                await tokenRepository.revokeById(tokenId);
 
                 const token = await knex("refresh_tokens").select("revoked_at").where({ id: tokenId }).first();
                 expect(token.revoked_at).toBeDefined();
@@ -77,14 +80,16 @@ describe("Token Repository (Integration)", () => {
                 const now = Date.now();
                 const tokensData = [
                     {
-                        token: "test-token-123",
+                        token_hash: "token-hash-123",
                         user_id: userId,
+                        jti: randomUUID(),
                         expires_at: new Date(now + 86400000),
                         created_at: new Date(now - 10000) 
                     },
                     {
-                        token: "test-token-456",
+                        token_hash: "token-hash-456",
                         user_id: userId,
+                        jti: randomUUID(),
                         expires_at: new Date(now + 86400000),
                         created_at: new Date(now) 
                     }
@@ -101,31 +106,27 @@ describe("Token Repository (Integration)", () => {
         });
     });
 
-    describe("listByUserId", () => {
+    describe("findByJti", () => {
         it("should return tokens ordered by created_at desc", async () => {
             const now = Date.now();
-            const tokensData = [
-                {
-                    token: "test-token-123",
-                    user_id: userId,
-                    expires_at: new Date(now + 86400000),
-                    created_at: new Date(now - 10000) 
-                },
-                {
-                    token: "test-token-456",
-                    user_id: userId,
-                    expires_at: new Date(now + 86400000),
-                    created_at: new Date(now) 
-                }
-            ];
+            const tokenData = {
+                token_hash: "token-hash-123",
+                user_id: userId,
+                jti: randomUUID(),
+                expires_at: new Date(now + 86400000),
+                created_at: new Date(now - 10000) 
+            };
 
-            await knex("refresh_tokens").insert(tokensData);
+            await knex("refresh_tokens").insert(tokenData);
 
-            const responseList = await tokenRepository.listByUserId(userId);
+            const token = await tokenRepository.findByJti(tokenData.jti);
 
-            expect(responseList).toHaveLength(2);
-            expect(responseList[0]).toEqual({token: "test-token-456"});
-            expect(responseList[1]).toEqual({token: "test-token-123"});
+            expect(token).toBeDefined();
+            expect(token).toMatchObject({
+                token_hash: tokenData.token_hash,
+                user_id: userId,
+                jti: tokenData.jti
+            });
         });
     });
 });

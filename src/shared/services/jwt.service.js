@@ -6,9 +6,9 @@ const generateAccessToken = (userId, role) => {
     return jwt.sign({ id: userId, role: role }, secret, { expiresIn: "15m" });
 };
 
-const generateRefreshToken = (userId, role) => {
+const generateRefreshToken = (userId, role, jti) => {
     const secret = process.env.REFRESH_SECRET || process.env.SECRET;
-    return jwt.sign({ id: userId, role: role }, secret, { expiresIn: "7d" });
+    return jwt.sign({ id: userId, role: role, jti: jti }, secret, { expiresIn: "7d" });
 };
 
 const decodeAccessToken = (token) => {
