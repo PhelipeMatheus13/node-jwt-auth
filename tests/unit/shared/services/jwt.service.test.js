@@ -27,17 +27,17 @@ describe("JWT Service (Unit)", () => {
     describe("generateRefreshToken", () => {
         it("should generate refresh token using REFRESH_SECRET and expiration of 7d", () => {
             jwt.sign.mockReturnValue("refresh-token");
-            const token = jwtService.generateRefreshToken("user-123", "admin");
+            const token = jwtService.generateRefreshToken("user-123", "admin", "jti-uuid-123");
             expect(token).toBe("refresh-token");
-            expect(jwt.sign).toHaveBeenCalledWith({ id: "user-123", role: "admin" }, "refresh", { expiresIn: "7d" });
+            expect(jwt.sign).toHaveBeenCalledWith({ id: "user-123", role: "admin", jti: "jti-uuid-123" }, "refresh", { expiresIn: "7d" });
         });
 
         it("should fallback to SECRET when REFRESH_SECRET is not set", () => {
             delete process.env.REFRESH_SECRET;
             jwt.sign.mockReturnValue("fallback-token");
-            const token = jwtService.generateRefreshToken("user-123", "admin");
+            const token = jwtService.generateRefreshToken("user-123", "admin", "jti-uuid-123");
             expect(token).toBe("fallback-token");
-            expect(jwt.sign).toHaveBeenCalledWith({ id: "user-123", role: "admin" }, "secret", { expiresIn: "7d" });
+            expect(jwt.sign).toHaveBeenCalledWith({ id: "user-123", role: "admin", jti: "jti-uuid-123" }, "secret", { expiresIn: "7d" });
         });
     });
 
