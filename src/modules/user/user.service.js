@@ -15,17 +15,13 @@ const createUser = async (data) => {
     });
 };
 
-const findUserById = async (id) => {
+const getUserById = async (id) => {
     const user = await userRepository.findById(id);
     if (!user) throw notFound({ message: "User not found" });
     return user;
 };
 
-const findUserByEmail = async (email) => {
-    const user = await userRepository.findByEmail(email);
-    if (!user) throw notFound({ message: "User not found" });
-    return user;
-};
+const findUserByEmail = (email) => userRepository.findByEmail(email);
 
 const deleteUserById = async (id) => {
     const deletedRows = await userRepository.deleteById(id);
@@ -37,7 +33,7 @@ const deleteUserById = async (id) => {
 
 module.exports =  {
     createUser,
-    findUserById,
+    getUserById,
     findUserByEmail,
     deleteUserById
 };

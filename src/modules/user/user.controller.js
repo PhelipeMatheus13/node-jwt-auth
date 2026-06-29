@@ -21,7 +21,7 @@ const getUser = asyncHandler(async (req, res) =>  {
         throw forbidden({ message: "You can only access your own data" });
     }
 
-    const user = await userService.findUserById(id);
+    const user = await userService.getUserById(id);
     res.status(200).json({
         success: true,
         data: userOutputDTO(user),

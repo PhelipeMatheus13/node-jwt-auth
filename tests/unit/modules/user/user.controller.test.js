@@ -44,7 +44,7 @@ describe("User Controller (Unit)", () => {
             req.user.id = "uuid-123";
             req.user.role = "user";
             const mockUser = { id: "uuid-123", name: "Test", email: "test@example.com", role: "user" };
-            userService.findUserById.mockResolvedValue(mockUser);
+            userService.getUserById.mockResolvedValue(mockUser);
 
             await userController.getUser(req, res, next);
 
@@ -62,7 +62,7 @@ describe("User Controller (Unit)", () => {
             req.user.id = "uuid-456"; 
             req.user.role = "admin";
             const mockUser = { id: "uuid-123", name: "Test", email: "test@example.com", role: "user" };
-            userService.findUserById.mockResolvedValue(mockUser);
+            userService.getUserById.mockResolvedValue(mockUser);
 
             await userController.getUser(req, res, next);
 

@@ -60,13 +60,13 @@ describe("User Service (Unit)", () => {
     });
 
 
-    describe("findUserById", () => {
+    describe("getUserById", () => {
         const userId = "uuid-123";
 
         it("should throw an error if repository.findById fails", async () => {
             userRepository.findById.mockRejectedValue(new Error("fake error"));
 
-            await expect(userService.findUserById(userId))
+            await expect(userService.getUserById(userId))
                 .rejects.toThrow("fake error");
         });
 
@@ -74,7 +74,7 @@ describe("User Service (Unit)", () => {
         it("should throw NOT_FOUND error if user does not exist", async () => {
            userRepository.findById.mockResolvedValue(undefined); // knex returns undefined
 
-            await expect(userService.findUserById(userId))
+            await expect(userService.getUserById(userId))
                 .rejects.toMatchObject({
                     statusCode: 404,
                     code: "NOT_FOUND",
@@ -88,7 +88,7 @@ describe("User Service (Unit)", () => {
                 id: userId, name: "Test", email: "test@example.com", password: "secret"
             });
 
-            const result = await userService.findUserById(userId);
+            const result = await userService.getUserById(userId);
 
             expect(result).toEqual({
                 id: userId, 
@@ -114,18 +114,6 @@ describe("User Service (Unit)", () => {
 
             const result = await userService.findUserByEmail(email);
             expect(result).toEqual(userResponse);
-        });
-
-        it("should throw NOT_FOUND error if user does not exist", async () => {
-            userRepository.findByEmail.mockResolvedValue(undefined); // knex returns undefined
-
-            await expect(userService.findUserByEmail(email))
-                .rejects.toMatchObject({
-                    statusCode: 404,
-                    code: "NOT_FOUND",
-                    message: "User not found",
-                    isOperational: true,
-                });
         });
     });
 
