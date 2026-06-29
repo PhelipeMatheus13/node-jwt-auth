@@ -9,7 +9,7 @@ describe("Token Service (Unit)", () => {
     });
 
     describe("saveRefreshToken", () => {
-        const tokendata = {token: "token", userId: "uuid-123", expiresAt: new Date()}
+        const tokendata = {tokenHash: "token", userId: "uuid-123", jti: "jti-uuid-123", expiresAt: new Date()}
         it("should throw an error if repository.create fails", async () => {
             tokenRepository.create.mockRejectedValue(new Error("fake error"));
 
@@ -25,18 +25,18 @@ describe("Token Service (Unit)", () => {
     });
 
 
-    describe("revokeRefreshToken", () => {
-        it("should throw an error if repository.revokeByToken fails", async () => {
-            tokenRepository.revokeByToken.mockRejectedValue(new Error("fake error"));
+    describe("revokeRefreshTokenById", () => {
+        it("should throw an error if repository.revokeById fails", async () => {
+            tokenRepository.revokeById.mockRejectedValue(new Error("fake error"));
 
-            await expect(tokenService.revokeRefreshToken("token")).rejects.toThrow("fake error");
+            await expect(tokenService.revokeRefreshTokenById("token-id-123")).rejects.toThrow("fake error");
         });
 
-        it("should call repository.revokeByToken", async () => {
-            tokenRepository.revokeByToken.mockResolvedValue(1);
+        it("should call repository.revokeById", async () => {
+            tokenRepository.revokeById.mockResolvedValue(1);
 
-            await tokenService.revokeRefreshToken("token");
-            expect(tokenRepository.revokeByToken).toHaveBeenCalledWith("token", null);
+            await tokenService.revokeRefreshTokenById("token-id-123");
+            expect(tokenRepository.revokeById).toHaveBeenCalledWith("token-id-123", null);
         });
     });
 
@@ -55,25 +55,22 @@ describe("Token Service (Unit)", () => {
         });
     });
 
-    describe("listRefreshTokensByUserId", () => {
-        it("should throw an error if repository.listByUserId fails", async () => {
-            tokenRepository.listByUserId.mockRejectedValue(new Error("fake error"));
+    describe("findRefreshTokenByJti", () => {
+        it("should throw an error if repository.findByJti fails", async () => {
+            tokenRepository.findByJti.mockRejectedValue(new Error("fake error"));
 
-            await expect(tokenService.listRefreshTokensByUserId("token")).rejects.toThrow("fake error");
+            await expect(tokenService.findRefreshTokenByJti("jti-uuid-123")).rejects.toThrow("fake error");
         });
 
-        it("should call repository.listByUserId", async () => {
-            const tokensData = [
-                {token: "test-token-123"},
-                {token: "test-token-456"}
-            ];
+        it("should call repository.findByJti", async () => {
+            const tokenData = {token: "test-token-123"};
 
-            tokenRepository.listByUserId.mockResolvedValue(tokensData);
+            tokenRepository.findByJti.mockResolvedValue(tokenData);
 
-            const response = await tokenService.listRefreshTokensByUserId("token");
+            const response = await tokenService.findRefreshTokenByJti("jti-uuid-123");
 
-            expect(tokenRepository.listByUserId).toHaveBeenCalledWith("token");
-            expect(response).toBe(tokensData)
+            expect(tokenRepository.findByJti).toHaveBeenCalledWith("jti-uuid-123");
+            expect(response).toBe(tokenData)
         });
     });
 });
