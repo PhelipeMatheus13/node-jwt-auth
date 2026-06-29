@@ -6,11 +6,15 @@ A simple and secure authentication API built with Node.js, Express, and PostgreS
 
 - User registration with password hashing (bcrypt)
 - User login returning access and refresh tokens (JWT)
-- Protected routes using middleware
-- Refresh token rotation stored in PostgreSQL
-- Logout with token revocation
+- Role-based access control (admin / user)
+- Admin-only routes (delete any user) and ownership protection
+- Refresh token rotation with sliding expiration and atomic database transactions
+- JWT ID (JTI) for per-token identification and reuse detection
+- Automatic revocation of all user tokens on suspicious reuse
+- Logout and global logout (all devices)
 - Centralized error handling with custom `AppError` and `asyncHandler` wrapper
 - Input validation with express-validator
+- DTO layer for consistent input/output formatting and JSDoc type annotations
 - Repository pattern for data access
 - SQL migrations with Knex.js
 - Unit and integration tests with Jest, Supertest, and testcontainers
