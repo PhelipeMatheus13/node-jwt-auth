@@ -31,6 +31,26 @@ const revokeAllByUserId = async (userId) => {
         .update({ revoked_at: knex.fn.now() });
 };
 
+const deleteExpired = async () => {
+    const knex = getKnex();
+    return knex("refresh_tokens")
+        .where("expires_at", "<", knex.fn.now())
+        .whereNull("revoked_at")
+        .del();
+};
+
+const deleteRevokedOlderThan = async (hours) => {
+    const knex = getKnex();
+    return knex("refresh_tokens")
+        .whereNotNull("revoked_at")
+        .where(
+            "revoked_at",
+            "<",
+            knex.raw("NOW() - (? * INTERVAL '1 hour')", [hours])
+        )
+        .del();
+};
+
 // Reader
 const findByJti = async (jti) => {
     const knex = getKnex();
@@ -45,6 +65,8 @@ module.exports = {
     create,
     revokeById,
     revokeAllByUserId,
+    deleteExpired,
+    deleteRevokedOlderThan,
     // reader
     findByJti
 };

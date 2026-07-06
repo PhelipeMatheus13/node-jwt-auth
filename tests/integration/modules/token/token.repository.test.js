@@ -104,28 +104,107 @@ describe("Token Repository (Integration)", () => {
                 });
             });
         });
+
+        describe("deleteExpired", () => {
+            it("should delete expired tokens ", async () => {
+                const now = Date.now();
+                // Create 2 expired tokens
+                const tokensData = [
+                    {
+                        token_hash: "token-hash-123",
+                        user_id: userId,
+                        jti: randomUUID(),
+                        expires_at: new Date(now - 86400000), 
+                        created_at: new Date(now - 172800000)
+                    },
+                    {
+                        token_hash: "token-hash-456",
+                        user_id: userId,
+                        jti: randomUUID(),
+                        expires_at: new Date(now - 86400000), 
+                        created_at: new Date(now - 172800000)
+                    }
+                ];
+
+                await knex("refresh_tokens").insert(tokensData);
+
+                // calls the repository function
+                await tokenRepository.deleteExpired();
+
+                const tokens = await knex("refresh_tokens").select("*");
+
+                expect(tokens).toHaveLength(0);
+            });
+        });
+
+        describe("deleteRevokedOlderThan", () => {
+            it("should delete only revoked tokens older than the specified hours", async () => {
+                const now = Date.now();
+
+                const tokensData = [
+                    {
+                        token_hash: "token-hash-123",
+                        user_id: userId,
+                        jti: randomUUID(),
+                        expires_at: new Date(now + 86400000),
+                        created_at: new Date(now - 172800000),
+                        revoked_at: new Date(now - 172800000), // 48 hours ago
+                    },
+                    {
+                        token_hash: "token-hash-456",
+                        user_id: userId,
+                        jti: randomUUID(),
+                        expires_at: new Date(now + 86400000),
+                        created_at: new Date(now - 86400000),
+                        revoked_at: new Date(now - 21600000), // 6 hours ago
+                    },
+                    {
+                        token_hash: "token-hash-789",
+                        user_id: userId,
+                        jti: randomUUID(),
+                        expires_at: new Date(now + 86400000),
+                        created_at: new Date(now),
+                        revoked_at: null,
+                    },
+                ];
+
+                await knex("refresh_tokens").insert(tokensData);
+
+                await tokenRepository.deleteRevokedOlderThan(24);
+
+                const remainingTokens = await knex("refresh_tokens").select("*");
+
+                expect(remainingTokens).toHaveLength(2);
+                expect(remainingTokens.map(token => token.token_hash).sort()).toEqual([
+                    "token-hash-456",
+                    "token-hash-789",
+                ]);
+            });
+        });
     });
 
-    describe("findByJti", () => {
-        it("should return tokens ordered by created_at desc", async () => {
-            const now = Date.now();
-            const tokenData = {
-                token_hash: "token-hash-123",
-                user_id: userId,
-                jti: randomUUID(),
-                expires_at: new Date(now + 86400000),
-                created_at: new Date(now - 10000) 
-            };
+    describe("Reader repository", () => {
+        describe("findByJti", () => {
+            it("should return tokens ordered by created_at desc", async () => {
+                const now = Date.now();
+                const tokenData = {
+                    token_hash: "token-hash-123",
+                    user_id: userId,
+                    jti: randomUUID(),
+                    expires_at: new Date(now + 86400000),
+                    created_at: new Date(now - 10000) 
+                };
 
-            await knex("refresh_tokens").insert(tokenData);
+                await knex("refresh_tokens").insert(tokenData);
 
-            const token = await tokenRepository.findByJti(tokenData.jti);
+                const token = await tokenRepository.findByJti(tokenData.jti);
 
-            expect(token).toBeDefined();
-            expect(token).toMatchObject({
-                token_hash: tokenData.token_hash,
-                user_id: userId,
-                jti: tokenData.jti
+                expect(token).toBeDefined();
+                expect(token).toMatchObject({
+                    token_hash: tokenData.token_hash,
+                    user_id: userId,
+                    jti: tokenData.jti
+                });
             });
         });
     });
