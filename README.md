@@ -17,6 +17,7 @@ A simple and secure authentication API built with Node.js, Express, and PostgreS
 - DTO layer for consistent input/output formatting and JSDoc type annotations
 - Repository pattern for data access
 - SQL migrations with Knex.js
+- Scheduled job for cleaning expired and revoked tokens (background worker)
 - Unit and integration tests with Jest, Supertest, and testcontainers
 - Dockerized development environment
 
