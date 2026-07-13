@@ -1,12 +1,20 @@
 require("dotenv").config();
 const express = require("express");
+const httpLogger = require("./shared/middlewares/http-logger.middleware");
 const errorHandler = require("./shared/middlewares/error.middleware")
+const requestContextMiddleware = require("./shared/middlewares/request-context.middleware");
 
 // Import routes
 const authRoutes = require("./modules/auth/auth.routes");
 const userRoutes = require("./modules/user/user.routes");
 
 const app = express();
+
+// Log every incoming request/response
+app.use(httpLogger);
+
+// Add request context middleware to propagate requestId through async calls
+app.use(requestContextMiddleware);
 
 // Transform the body of the request into JSON
 app.use(express.json());
