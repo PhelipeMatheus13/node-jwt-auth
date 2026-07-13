@@ -1,3 +1,5 @@
+const logger = require("../utils/logger");
+
 /**
  * Global error handling middleware.
  *
@@ -9,7 +11,7 @@ const errorHandler = (err, req, res, next) => {
         return res.status(err.statusCode).json(err.toJSON());
     }
 
-    console.error('Unexpected error: ', err);
+    logger.error({ err }, "Unexpected error");
     return res.status(500).json({
         success: false,
         error: {

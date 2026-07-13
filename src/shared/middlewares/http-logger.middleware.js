@@ -1,5 +1,5 @@
 const pinoHttp = require('pino-http');
-const { logger } = require('../utils/logger');
+const logger  = require('../utils/logger');
 
 // easy to expand the list of ignored routes in the future
 const IGNORED_ROUTES = ["/"];

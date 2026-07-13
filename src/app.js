@@ -1,4 +1,3 @@
-require("dotenv").config();
 const express = require("express");
 const httpLogger = require("./shared/middlewares/http-logger.middleware");
 const errorHandler = require("./shared/middlewares/error.middleware")

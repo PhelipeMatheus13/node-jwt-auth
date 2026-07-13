@@ -1,4 +1,5 @@
-require("dotenv").config();
+require("dotenv").config({ quiet: true });
+const logger = require("../utils/logger");
 
 const environment = process.env.NODE_ENV || "development";
 
@@ -59,7 +60,7 @@ const checkConnection = async () => {
         await _knex.raw("SELECT 1");
         return true;
     } catch (error) {
-        console.error("Database connection failed:", error.message);
+        logger.error({ err: error }, "Database connection failed:");
         return false;
     }
 };
