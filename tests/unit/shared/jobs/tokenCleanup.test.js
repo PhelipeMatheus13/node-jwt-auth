@@ -1,18 +1,23 @@
 const tokenCleanup = require("../../../../src/shared/jobs/tokenCleanup.job");
 const tokenCleanupService = require("../../../../src/modules/token/token.cleanup.service")
 const { withRetry } = require("../../../../src/shared/utils/retry");
+const logger  = require("../../../../src/shared/utils/logger");
 
 jest.mock("../../../../src/modules/token/token.cleanup.service");
+
 jest.mock("../../../../src/shared/utils/retry", () => ({
     withRetry: jest.fn((fn) => fn()),
+}));
+
+jest.mock("../../../../src/shared/utils/logger", () => ({
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
 }));
 
 describe("Token cleanup (Unit)", () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        console.log = jest.fn();
-        console.warn = jest.fn();
-        console.error = jest.fn();
     });
 
     afterEach(() => {
@@ -30,8 +35,8 @@ describe("Token cleanup (Unit)", () => {
             expect(tokenCleanupService.deleteExpiredRefreshTokens).toHaveBeenCalled();
             expect(tokenCleanupService.deleteRevokedRefreshTokensOlderThan).toHaveBeenCalled();
 
-            expect(console.log).toHaveBeenCalledWith(
-                "Token cleanup: removed 5 expired, 3 revoked tokens"
+            expect(logger.info).toHaveBeenCalledWith(
+                "Token cleanup completed: 5 expired, 3 revoked tokens removed"
             );
         });
 
@@ -41,9 +46,9 @@ describe("Token cleanup (Unit)", () => {
 
             await tokenCleanup.runTokenCleanup();
 
-            expect(console.error).toHaveBeenCalledWith(
-                "deleteExpiredRefreshTokens: failed after retries:",
-                error
+            expect(logger.error).toHaveBeenCalledWith(
+                { err: error },
+                "deleteExpiredRefreshTokens failed after retries"
             );
         });
 
@@ -53,9 +58,9 @@ describe("Token cleanup (Unit)", () => {
 
             await tokenCleanup.runTokenCleanup();
 
-            expect(console.error).toHaveBeenCalledWith(
-                "deleteRevokedRefreshTokensOlderThan: failed after retries:",
-                error
+            expect(logger.error).toHaveBeenCalledWith(
+                { err: error },
+                "deleteRevokedRefreshTokensOlderThan failed after retries"
             );
         });
 
@@ -65,7 +70,7 @@ describe("Token cleanup (Unit)", () => {
 
             await tokenCleanup.runTokenCleanup();
 
-            expect(console.error).toHaveBeenCalledTimes(2);
+            expect(logger.error).toHaveBeenCalledTimes(2);
         });
     });
 
@@ -85,7 +90,7 @@ describe("Token cleanup (Unit)", () => {
             tokenCleanup.startTokenCleanupJob();
             tokenCleanup.startTokenCleanupJob();
 
-            expect(console.warn).toHaveBeenCalledWith("Token cleanup job is already running");
+            expect(logger.warn).toHaveBeenCalledWith("Token cleanup job is already running");
         });
     });
 
@@ -107,7 +112,7 @@ describe("Token cleanup (Unit)", () => {
             tokenCleanup.stopTokenCleanupJob();
             tokenCleanup.startTokenCleanupJob();
 
-            expect(console.warn).not.toHaveBeenCalledWith("Token cleanup job is already running");
+            expect(logger.warn).not.toHaveBeenCalledWith("Token cleanup job is already running");
         });
 
         it("should do nothing if the job was never started", () => {

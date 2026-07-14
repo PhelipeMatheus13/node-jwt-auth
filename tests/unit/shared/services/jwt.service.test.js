@@ -1,7 +1,13 @@
 const jwtService = require("../../../../src/shared/services/jwt.service");
 const jwt = require("jsonwebtoken");
+const logger = require("../../../../src/shared/utils/logger");
 
 jest.mock("jsonwebtoken");
+
+jest.mock("../../../../src/shared/utils/logger", () => ({
+    warn: jest.fn(),
+    error: jest.fn(),
+}));
 
 describe("JWT Service (Unit)", () => {
     const originalEnv = { ...process.env };
@@ -64,8 +70,11 @@ describe("JWT Service (Unit)", () => {
                 );
         });
 
-        it("should throw INVALID_TOKEN error for other verification failures", () => {
-            jwt.verify.mockImplementation(() => { throw new Error("invalid signature"); });
+        it("should log a warning and throw INVALID_TOKEN for a known jwt library error", () => {
+            const jwtError = new Error("invalid signature");
+            jwtError.name = "JsonWebTokenError";
+            jwt.verify.mockImplementation(() => { throw jwtError; });
+
 
             expect(() => jwtService.decodeAccessToken("bad-token"))
                 .toThrow(
@@ -75,6 +84,26 @@ describe("JWT Service (Unit)", () => {
                         message: "Invalid access token",
                     })
                 );
+
+            expect(logger.warn).toHaveBeenCalledWith({ err: jwtError }, "Invalid access token");
+        });
+
+
+        it("should log an error and throw INVALID_TOKEN for an unexpected error", () => {
+            const unexpectedError = new Error("unexpected error");
+            jwt.verify.mockImplementation(() => { throw unexpectedError; });
+
+
+            expect(() => jwtService.decodeAccessToken("bad-token"))
+                .toThrow(
+                    expect.objectContaining({
+                        statusCode: 401,
+                        code: "INVALID_TOKEN",
+                        message: "Invalid access token",
+                    })
+                );
+
+            expect(logger.error).toHaveBeenCalledWith({ err: unexpectedError }, "Unexpected error while verifying access token");
         });
     });
 
@@ -101,8 +130,11 @@ describe("JWT Service (Unit)", () => {
                 );
         });
 
-        it("should throw INVALID_TOKEN error for other verification failures", () => {
-            jwt.verify.mockImplementation(() => { throw new Error("invalid signature"); });
+        it("should log a warning and throw INVALID_TOKEN for a known jwt library error", () => {
+            const jwtError = new Error("invalid signature");
+            jwtError.name = "JsonWebTokenError";
+            jwt.verify.mockImplementation(() => { throw jwtError; });
+
 
             expect(() => jwtService.decodeRefreshToken("bad-token"))
                 .toThrow(
@@ -112,6 +144,26 @@ describe("JWT Service (Unit)", () => {
                         message: "Invalid refresh token",
                     })
                 );
+
+            expect(logger.warn).toHaveBeenCalledWith({ err: jwtError }, "Invalid refresh token");
+        });
+
+
+        it("should log an error and throw INVALID_TOKEN for an unexpected error", () => {
+            const unexpectedError = new Error("unexpected error");
+            jwt.verify.mockImplementation(() => { throw unexpectedError; });
+
+
+            expect(() => jwtService.decodeRefreshToken("bad-token"))
+                .toThrow(
+                    expect.objectContaining({
+                        statusCode: 401,
+                        code: "INVALID_TOKEN",
+                        message: "Invalid refresh token",
+                    })
+                );
+
+            expect(logger.error).toHaveBeenCalledWith({ err: unexpectedError }, "Unexpected error while verifying refresh token");
         });
 
         it("should fallback to SECRET when REFRESH_SECRET is not set", () => {

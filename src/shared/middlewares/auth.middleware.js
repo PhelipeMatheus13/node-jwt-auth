@@ -1,4 +1,5 @@
 const jwt = require("../services/jwt.service");
+const logger = require("../utils/logger");
 const { unauthorized, forbidden } = require("../../shared/errors/errors");
 
 /**
@@ -20,9 +21,9 @@ const checkToken = (req, res, next) => {
         const decoded = jwt.decodeAccessToken(token);
         req.user = { id: decoded.id, role: decoded.role };
         next();
-    } catch (err) {
-        console.log(err);
-        next(err);
+    } catch (error) {
+        logger.error({ err: error }, "Token validation failed:");
+        next(error);
     }
 }
 

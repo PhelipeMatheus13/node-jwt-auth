@@ -1,6 +1,6 @@
 # JWT Authentication API
 
-A simple and secure authentication API built with Node.js, Express, and PostgreSQL. It implements JWT-based authentication with access and refresh tokens, input validation, and a clean MVC architecture with a repository layer. The project includes comprehensive unit and integration tests using ephemeral PostgreSQL containers.
+A simple and secure authentication API built with Node.js, Express, and PostgreSQL. It implements JWT-based authentication with access and refresh tokens, role-based authorization, input validation, DTOs, and a clean modular architecture. The project includes comprehensive unit and integration tests using ephemeral PostgreSQL containers.
 
 ## Features
 
@@ -18,6 +18,8 @@ A simple and secure authentication API built with Node.js, Express, and PostgreS
 - Repository pattern for data access
 - SQL migrations with Knex.js
 - Scheduled job for cleaning expired and revoked tokens (background worker)
+- Structured logging with Pino and request context propagation (AsyncLocalStorage)
+- Automatic redaction of sensitive data in logs
 - Unit and integration tests with Jest, Supertest, and testcontainers
 - Dockerized development environment
 
@@ -33,6 +35,8 @@ A simple and secure authentication API built with Node.js, Express, and PostgreS
 - Jest
 - Supertest
 - testcontainers
+- Pino (logger)
+- pino-http (HTTP request logger)
 
 ## Database Setup (Development)
 
@@ -67,3 +71,5 @@ npm install
 ## Notes
 
 > ⚠️ You must have Docker installed and properly configured, and be running in a Linux-based environment (or WSL on Windows) for the project to work correctly.
+
+The logger.js and httpLogger.js modules do not have unit tests because they are essentially configurations for Pino/Pino HTTP. Their behavior is validated manually in the development environment, while the business logic related to logger usage is covered by tests in the consuming modules.
