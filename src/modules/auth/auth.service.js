@@ -63,7 +63,6 @@ const rotateTokens = async (oldRefreshToken) => {
 
     if (tokenData.revoked_at) {
         // If the token has been revoked, revoke all tokens for this user to prevent reuse
-        // TODO: implement logging this event for security auditing
         await tokenService.revokeAllRefreshTokensByUserId(tokenData.user_id);
 
         logger.error({
