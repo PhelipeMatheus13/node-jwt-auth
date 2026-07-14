@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+var logger = require("../../shared/utils/logger");
 const { unauthorized } = require("../errors/errors");
 
 const generateAccessToken = (userId, role) => {
@@ -15,10 +16,17 @@ const decodeAccessToken = (token) => {
     const secret = process.env.SECRET;
     try {
         return jwt.verify(token, secret);
-    } catch (err) {
-        if (err.name === 'TokenExpiredError') {
+    } catch (error) {
+        if (error.name === 'TokenExpiredError') {
             throw unauthorized({ message: "Access token expired", code: "TOKEN_EXPIRED" });
         }
+
+        if (error.name === 'JsonWebTokenError' || error.name === 'NotBeforeError') {
+            logger.warn({ err: error }, "Invalid access token");
+            throw unauthorized({ message: "Invalid access token", code: "INVALID_TOKEN" });
+        }
+
+        logger.error({ err: error }, "Unexpected error while verifying access token");
         throw unauthorized({ message: "Invalid access token", code: "INVALID_TOKEN" });
     }
 };
@@ -27,10 +35,17 @@ const decodeRefreshToken = (token) => {
     const secret = process.env.REFRESH_SECRET || process.env.SECRET;
     try {
         return jwt.verify(token, secret);
-    } catch (err) {
-        if (err.name === 'TokenExpiredError') {
+    } catch (error) {
+        if (error.name === 'TokenExpiredError') {
             throw unauthorized({ message: "Refresh token expired", code: "TOKEN_EXPIRED" });
         }
+
+        if (error.name === 'JsonWebTokenError' || error.name === 'NotBeforeError') {
+            logger.warn({ err: error }, "Invalid refresh token");
+            throw unauthorized({ message: "Invalid refresh token", code: "INVALID_TOKEN" });
+        }
+
+        logger.error({ err: error }, "Unexpected error while verifying refresh token");
         throw unauthorized({ message: "Invalid refresh token", code: "INVALID_TOKEN" });
     }
 };

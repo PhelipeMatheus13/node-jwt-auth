@@ -1,3 +1,4 @@
+const logger = require("../../shared/utils/logger");
 const hashService = require("../../shared/services/hash.service");
 const jwtService = require("../../shared/services/jwt.service");
 const userService = require("../user/user.service");
@@ -65,6 +66,12 @@ const rotateTokens = async (oldRefreshToken) => {
         // TODO: implement logging this event for security auditing
         await tokenService.revokeAllRefreshTokensByUserId(tokenData.user_id);
 
+        logger.error({
+            userId: tokenData.user_id,
+            jti: tokenData.jti,
+            tokenId: tokenData.id,
+        }, "Refresh token reuse detected: all sessions revoked");
+
         throw unauthorized({message: "Refresh token reuse detected", code: "TOKEN_REUSE_DETECTED"});
     }
 
@@ -88,6 +95,12 @@ const rotateTokens = async (oldRefreshToken) => {
         const revokedRows = await tokenService.revokeRefreshTokenById(tokenData.id, trx);
         if (revokedRows === 0) {
             // race condition: the token was revoked by another process after we checked but before we revoked it
+            logger.error({
+                userId: tokenData.user_id,
+                jti: tokenData.jti,
+                tokenId: tokenData.id,
+            },"Refresh token reuse detected: race condition on revoke");
+
             throw unauthorized({ message: "Refresh token reuse detected", code: "TOKEN_REUSE_DETECTED" });
         }
 
@@ -117,6 +130,11 @@ const logout = async (refreshToken) => {
     if (tokenData.revoked_at) {
         // Logout is idempotent: the token is already dead, the goal is already achieved
         // it does not grant new tokens, so there is no privilege to protect here
+        logger.error({
+            userId: tokenData.user_id,
+            jti: tokenData.jti,
+            tokenId: tokenData.id,
+        }, "Refresh token reuse detected: logout called on already revoked token");
         return;
     }
 
