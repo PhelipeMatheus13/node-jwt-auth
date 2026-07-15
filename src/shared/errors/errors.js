@@ -86,6 +86,7 @@ const internal = (options = {}) => new AppError({
 });
 
 module.exports = {
+    AppError,
     badRequest,
     unauthorized,
     forbidden,

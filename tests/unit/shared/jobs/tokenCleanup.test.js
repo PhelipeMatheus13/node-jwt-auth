@@ -16,13 +16,24 @@ jest.mock("../../../../src/shared/utils/logger", () => ({
 }));
 
 describe("Token cleanup (Unit)", () => {
+    const originalEnv = { ...process.env };
+
     beforeEach(() => {
         jest.clearAllMocks();
+        jest.useRealTimers();
+
+        process.env = { ...originalEnv };
+
+        jest.resetModules();
     });
 
     afterEach(() => {
         tokenCleanup.stopTokenCleanupJob();
+
+        process.env = { ...originalEnv };
+
         jest.clearAllMocks();
+        jest.useRealTimers();
     });
 
     describe("runTokenCleanup", () => {
@@ -43,6 +54,7 @@ describe("Token cleanup (Unit)", () => {
         it("should log errors if deleteExpiredRefreshTokens fails", async () => {
             const error = new Error("Failed to delete expired tokens");
             tokenCleanupService.deleteExpiredRefreshTokens.mockRejectedValue(error);
+            tokenCleanupService.deleteRevokedRefreshTokensOlderThan.mockResolvedValue(2);
 
             await tokenCleanup.runTokenCleanup();
 
@@ -50,9 +62,14 @@ describe("Token cleanup (Unit)", () => {
                 { err: error },
                 "deleteExpiredRefreshTokens failed after retries"
             );
+
+            expect(logger.info).toHaveBeenCalledWith(
+                "Token cleanup completed: N/A expired, 2 revoked tokens removed"
+            );
         });
 
         it("should log errors if deleteRevokedRefreshTokensOlderThan fails", async () => {
+            tokenCleanupService.deleteExpiredRefreshTokens.mockResolvedValue(4);
             const error = new Error("Failed to delete revoked tokens");
             tokenCleanupService.deleteRevokedRefreshTokensOlderThan.mockRejectedValue(error);
 
@@ -61,6 +78,10 @@ describe("Token cleanup (Unit)", () => {
             expect(logger.error).toHaveBeenCalledWith(
                 { err: error },
                 "deleteRevokedRefreshTokensOlderThan failed after retries"
+            );
+            
+            expect(logger.info).toHaveBeenCalledWith(
+                "Token cleanup completed: 4 expired, N/A revoked tokens removed"
             );
         });
 
@@ -91,6 +112,44 @@ describe("Token cleanup (Unit)", () => {
             tokenCleanup.startTokenCleanupJob();
 
             expect(logger.warn).toHaveBeenCalledWith("Token cleanup job is already running");
+        });
+
+        it("should use TOKEN_CLEANUP_INTERVAL_MS from environment variable", () => {
+            jest.useFakeTimers();
+
+            process.env.TOKEN_CLEANUP_INTERVAL_MS = "30000";
+
+            jest.resetModules();
+
+            const tokenCleanupJob = require("../../../../src/shared/jobs/tokenCleanup.job");
+
+            jest.spyOn(global, "setInterval");
+
+            tokenCleanupJob.startTokenCleanupJob();
+
+            expect(setInterval).toHaveBeenCalledWith(
+                expect.any(Function),
+                30000
+            );
+        });
+
+        it("should use 1 hour as default interval when TOKEN_CLEANUP_INTERVAL_MS is not defined", () => {
+            jest.useFakeTimers();
+
+            delete process.env.TOKEN_CLEANUP_INTERVAL_MS;
+
+            jest.resetModules();
+
+            const tokenCleanupJob = require("../../../../src/shared/jobs/tokenCleanup.job");
+
+            jest.spyOn(global, "setInterval");
+
+            tokenCleanupJob.startTokenCleanupJob();
+
+            expect(setInterval).toHaveBeenCalledWith(
+                expect.any(Function),
+                60 * 60 * 1000
+            );
         });
     });
 

@@ -3,9 +3,16 @@ const tokenRepository = require("../../../../src/modules/token/token.repository"
 
 jest.mock("../../../../src/modules/token/token.repository");
 
-describe("Token cleanup service", () => {
+describe("Token cleanup service (Unit)", () => {
+    const originalEnv = { ...process.env };
+
     beforeEach(() => {
         jest.clearAllMocks();
+        process.env = { ...originalEnv };
+    });
+
+    afterEach(() => {
+        process.env = { ...originalEnv };
     });
 
     describe("deleteExpiredRefreshTokens", () => {
@@ -21,7 +28,7 @@ describe("Token cleanup service", () => {
         
             await tokenCleanupService.deleteExpiredRefreshTokens();
 
-            expect(tokenRepository.deleteExpired).toHaveBeenCalled();
+            expect(tokenRepository.deleteExpired).toHaveBeenCalledTimes(1);
         });
     });
 
@@ -32,15 +39,26 @@ describe("Token cleanup service", () => {
             await expect(tokenCleanupService.deleteRevokedRefreshTokensOlderThan())
                 .rejects.toThrow("Failed to delete revoked tokens");
         });
-        
-        it("should call tokenRepository.deleteRevokedOlderThan with the correct retention hours", async () => {
-            const retentionHours = process.env.RETENTION_HOURS_TOKEN_REVOKED || 24;
+
+        it("should call tokenRepository.deleteRevokedOlderThan with retention hours from env", async () => {
+            process.env.RETENTION_HOURS_TOKEN_REVOKED = "48";
+
+            tokenRepository.deleteRevokedOlderThan.mockResolvedValue(1);
+
+            await tokenCleanupService.deleteRevokedRefreshTokensOlderThan();
+
+            expect(tokenRepository.deleteRevokedOlderThan)
+                .toHaveBeenCalledWith(48);
+        });
+
+        it("should use default retention hours when RETENTION_HOURS_TOKEN_REVOKED is not set", async () => {
+            delete process.env.RETENTION_HOURS_TOKEN_REVOKED;
 
             tokenRepository.deleteRevokedOlderThan.mockResolvedValue(1);
             await tokenCleanupService.deleteRevokedRefreshTokensOlderThan();
 
             expect(tokenRepository.deleteRevokedOlderThan)
-                .toHaveBeenCalledWith(retentionHours);
+                .toHaveBeenCalledWith(24);
         });
     }); 
 });
