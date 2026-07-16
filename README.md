@@ -72,4 +72,4 @@ npm install
 
 > ⚠️ You must have Docker installed and properly configured, and be running in a Linux-based environment (or WSL on Windows) for the project to work correctly.
 
-The logger.js and httpLogger.js modules do not have unit tests because they are essentially configurations for Pino/Pino HTTP. Their behavior is validated manually in the development environment, while the business logic related to logger usage is covered by tests in the consuming modules.
+> The logger.js and httpLogger.js modules do not have unit tests because they are essentially configurations for Pino/Pino HTTP. Their behavior is validated manually in the development environment, while the business logic related to logger usage is covered by tests in the consuming modules.
