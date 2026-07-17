@@ -7,7 +7,7 @@ const createUser = async (data) => {
     if (exists) throw alreadyExists({message: "Email already in use, please choose another"});
    
     // Hash the password before saving the user
-    const hashedPassword = await hashService.hash(data.password);
+    const hashedPassword = await hashService.hashPassword(data.password);
 
     return userRepository.create({
         ...data,

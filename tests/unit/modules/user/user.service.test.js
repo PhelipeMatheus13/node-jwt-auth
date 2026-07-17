@@ -31,9 +31,9 @@ describe("User Service (Unit)", () => {
                 });
         });
 
-        it("should throw if fail in user creation", async () => {
+        it("should throw if fail in hashService.hashPassword", async () => {
             userRepository.existsByEmail.mockResolvedValue(false);
-            hashService.hash.mockResolvedValue("hashedPassword");
+            hashService.hashPassword.mockResolvedValue("hashedPassword");
             userRepository.create.mockRejectedValue(new Error("fake error"));
 
             await expect(userService.createUser({ email: "test@example.com", password: "testPassword@123" }))
@@ -42,13 +42,13 @@ describe("User Service (Unit)", () => {
 
         it("should create user successfully", async () => {
             userRepository.existsByEmail.mockResolvedValue(false);
-            hashService.hash.mockResolvedValue("hashedPassword");
+            hashService.hashPassword.mockResolvedValue("hashedPassword");
             userRepository.create.mockResolvedValue("uuid-123");
 
             const data = { name: "Test", email: "test@example.com", password: "testPassword@123" };
             const result = await userService.createUser(data);
 
-            expect(hashService.hash).toHaveBeenCalledWith("testPassword@123");
+            expect(hashService.hashPassword).toHaveBeenCalledWith("testPassword@123");
             expect(userRepository.create).toHaveBeenCalledWith({
                 name: "Test",
                 email: "test@example.com",

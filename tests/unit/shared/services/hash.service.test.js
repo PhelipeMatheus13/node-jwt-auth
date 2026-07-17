@@ -8,45 +8,55 @@ describe("Hash Service (Unit)", () => {
         jest.clearAllMocks();
     });
 
-    describe("hash", () => {
+    describe("hashPassword", () => {
         it("should hash", async () => {
             bcrypt.genSalt.mockResolvedValue("salt");
             bcrypt.hash.mockResolvedValue("hashed");
 
-            const result = await hashService.hash("plain");
+            const result = await hashService.hashPassword("password");
 
             expect(bcrypt.genSalt).toHaveBeenCalledWith(12);
-            expect(bcrypt.hash).toHaveBeenCalledWith("plain", "salt");
+            expect(bcrypt.hash).toHaveBeenCalledWith("password", "salt");
             expect(result).toBe("hashed");
         });
 
         it("should throw internal error if bcrypt hashing fails", async () => {
             bcrypt.genSalt.mockRejectedValue(new Error("bcrypt error"));
 
-            await expect(hashService.hash("plain")).rejects.toMatchObject({
+            await expect(hashService.hashPassword("plain")).rejects.toMatchObject({
                 statusCode: 500,
                 code: "INTERNAL_ERROR",
-                message: "Failed to process hash",
+                message: "Failed to process password hash",
             });
         });
     });
 
-    describe("compare", () => {
-        it("should compare", async () => {
+    describe("comparePassword", () => {
+        it("should return true if passwords match", async () => {
             bcrypt.compare.mockResolvedValue(true);
 
-            const result = await hashService.compare("plain", "hash");
-            expect(bcrypt.compare).toHaveBeenCalledWith("plain", "hash");
+            const result = await hashService.comparePassword("password", "hash");
+            
+            expect(bcrypt.compare).toHaveBeenCalledWith("password", "hash");
             expect(result).toBe(true);
+        });
+
+        it("should return false if passwords do not match", async () => {
+            bcrypt.compare.mockResolvedValue(false);
+
+            const result = await hashService.comparePassword("password", "hash");
+            
+            expect(bcrypt.compare).toHaveBeenCalledWith("password", "hash");
+            expect(result).toBe(false);
         });
 
         it("should throw internal error if bcrypt compare fails", async () => {
             bcrypt.compare.mockRejectedValue(new Error("bcrypt error"));
 
-            await expect(hashService.compare("plain", "hash")).rejects.toMatchObject({
+            await expect(hashService.comparePassword("password", "hash")).rejects.toMatchObject({
                 statusCode: 500,
                 code: "INTERNAL_ERROR",
-                message: "Failed to compare hash",
+                message: "Failed to compare password hash",
             });
         });
     });

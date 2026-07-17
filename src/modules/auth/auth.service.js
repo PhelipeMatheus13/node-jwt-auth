@@ -13,7 +13,7 @@ const login = async (email, password) => {
     const userData = await userService.findUserByEmail(email);
  
     // For security reasons, any errors will be treated as invalid here
-    if (!userData || !(await hashService.compare(password, userData.password))) {
+    if (!userData || !(await hashService.comparePassword(password, userData.password))) {
         throw unauthorized({
             message: "Invalid email or password",
             code: "INVALID_CREDENTIALS",

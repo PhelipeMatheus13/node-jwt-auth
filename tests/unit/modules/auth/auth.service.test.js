@@ -53,9 +53,9 @@ describe("Auth Service (Unit)", () => {
                 });
         });
 
-        it("should throw if fail in hashService.compare", async () => {
+        it("should throw if fail in hashService.comparePassword", async () => {
             userService.findUserByEmail.mockResolvedValue(userData);
-            hashService.compare.mockRejectedValue(new Error("fake error"));
+            hashService.comparePassword.mockRejectedValue(new Error("fake error"));
 
             await expect(authService.login("test@example.com", "testPassword@123"))
                 .rejects.toThrow("fake error");
@@ -63,7 +63,7 @@ describe("Auth Service (Unit)", () => {
 
         it("should throw if password does not match", async () => {
             userService.findUserByEmail.mockResolvedValue(userData);
-            hashService.compare.mockResolvedValue(false);
+            hashService.comparePassword.mockResolvedValue(false);
 
             await expect(authService.login("test@example.com", "wrongPassword"))
                 .rejects.toMatchObject({
@@ -75,7 +75,7 @@ describe("Auth Service (Unit)", () => {
 
         it("should throw if fail in jwtService.generateAccessToken", async () => {
             userService.findUserByEmail.mockResolvedValue(userData);
-            hashService.compare.mockResolvedValue(true);
+            hashService.comparePassword.mockResolvedValue(true);
             jwtService.generateAccessToken.mockImplementation(() => {
                 throw new Error("fake error");
             });
@@ -86,7 +86,7 @@ describe("Auth Service (Unit)", () => {
 
         it("should throw if fail in jwtService.generateRefreshToken", async () => {
             userService.findUserByEmail.mockResolvedValue(userData);
-            hashService.compare.mockResolvedValue(true);
+            hashService.comparePassword.mockResolvedValue(true);
             jwtService.generateAccessToken.mockResolvedValue("access-token");
             jwtService.generateRefreshToken.mockImplementation(() => {
                 throw new Error("fake error");
@@ -99,7 +99,7 @@ describe("Auth Service (Unit)", () => {
 
         it("should throw if fail in jwtService.decodeRefreshToken", async () => {
             userService.findUserByEmail.mockResolvedValue(userData);
-            hashService.compare.mockResolvedValue(true);
+            hashService.comparePassword.mockResolvedValue(true);
             jwtService.generateAccessToken.mockResolvedValue("access-token");
             jwtService.generateRefreshToken.mockResolvedValue("refresh-token");
             jwtService.decodeRefreshToken.mockImplementation(() => {
@@ -112,7 +112,7 @@ describe("Auth Service (Unit)", () => {
 
         it("should throw if fail in tokenHashService.hashToken", async () => {
             userService.findUserByEmail.mockResolvedValue(userData);
-            hashService.compare.mockResolvedValue(true);
+            hashService.comparePassword.mockResolvedValue(true);
             jwtService.generateAccessToken.mockResolvedValue("access-token");
             jwtService.generateRefreshToken.mockResolvedValue("refresh-token");
             jwtService.decodeRefreshToken.mockResolvedValue(decodedRefreshToken);
@@ -124,7 +124,7 @@ describe("Auth Service (Unit)", () => {
 
         it("should throw if fail in tokenService.saveRefreshToken", async () => {
             userService.findUserByEmail.mockResolvedValue(userData);
-            hashService.compare.mockResolvedValue(true);
+            hashService.comparePassword.mockResolvedValue(true);
             jwtService.generateAccessToken.mockReturnValue("access-token");
             jwtService.generateRefreshToken.mockReturnValue("refresh-token");
             jwtService.decodeRefreshToken.mockReturnValue(decodedRefreshToken);
@@ -137,7 +137,7 @@ describe("Auth Service (Unit)", () => {
         
         it("should login successfully", async () => {
             userService.findUserByEmail.mockResolvedValue(userData);
-            hashService.compare.mockResolvedValue(true);
+            hashService.comparePassword.mockResolvedValue(true);
             jwtService.generateAccessToken.mockReturnValue("access-token");
             jwtService.generateRefreshToken.mockReturnValue("refresh-token");
             jwtService.decodeRefreshToken.mockReturnValue(decodedRefreshToken);

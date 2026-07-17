@@ -25,7 +25,7 @@ describe("Auth Routes (Integration)", () => {
     describe("POST /auth/login", () => {
         beforeEach(async () => {
             const password = "Pass@123";
-            const passwordHashed = await hashService.hash(password);
+            const passwordHashed = await hashService.hashPassword(password);
 
             await knex("users").insert({
                 name: "teste login",
@@ -65,7 +65,7 @@ describe("Auth Routes (Integration)", () => {
 
         beforeEach(async () => {
             const password = "Pass@123";
-            const passwordHashed = await hashService.hash(password);
+            const passwordHashed = await hashService.hashPassword(password);
 
             await knex("users").insert({
                 name: "teste refresh token",
@@ -96,7 +96,7 @@ describe("Auth Routes (Integration)", () => {
 
         beforeEach(async () => {
             const password = "Pass@123";
-            const passwordHashed = await hashService.hash(password);
+            const passwordHashed = await hashService.hashPassword(password);
 
             await knex("users").insert({
                 name: "teste logout",
@@ -127,7 +127,7 @@ describe("Auth Routes (Integration)", () => {
 
         beforeEach(async () => {
             const password = "Pass@123";
-            const passwordHashed = await hashService.hash(password);
+            const passwordHashed = await hashService.hashPassword(password);
 
             await knex("users").insert({
                 name: "teste logout all",
