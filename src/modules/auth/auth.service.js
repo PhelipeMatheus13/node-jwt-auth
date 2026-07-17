@@ -3,6 +3,7 @@ const hashService = require("../../shared/services/hash.service");
 const jwtService = require("../../shared/services/jwt.service");
 const userService = require("../user/user.service");
 const tokenService = require("../token/token.service");
+const tokenHashService = require("./token-hash.service.js");
 const {unauthorized} = require("../../shared/errors/errors");
 const { getKnex } = require("../../shared/config/database");
 const { randomUUID } = require("crypto");  
@@ -32,7 +33,7 @@ const login = async (email, password) => {
 
     const decoded = jwtService.decodeRefreshToken(refreshToken);
     // hash refresh token before saving in database
-    const hashedToken = await hashService.hash(refreshToken);
+    const hashedToken = await tokenHashService.hashToken(refreshToken);
 
     await tokenService.saveRefreshToken({
         tokenHash: hashedToken,
@@ -57,7 +58,7 @@ const rotateTokens = async (oldRefreshToken) => {
 
     // for security, compare the provided refresh token with the hashed version in the database
     // This ensures that the presented token is exactly the one that was issued
-    if (!(await hashService.compare(oldRefreshToken, tokenData.token_hash))) {
+    if (!(await tokenHashService.compareToken(oldRefreshToken, tokenData.token_hash))) {
         throw unauthorized({ message: "Invalid refresh token", code: "INVALID_TOKEN" });
     }
 
@@ -87,7 +88,7 @@ const rotateTokens = async (oldRefreshToken) => {
     );
 
     const newRefreshDecoded = jwtService.decodeRefreshToken(newRefreshToken);
-    const newRefreshTokenHash = await hashService.hash(newRefreshToken);
+    const newRefreshTokenHash = await tokenHashService.hashToken(newRefreshToken);
 
     const knex = getKnex();
     await knex.transaction(async (trx) => {
@@ -122,7 +123,7 @@ const logout = async (refreshToken) => {
         throw unauthorized({ message: "Refresh token not found", code: "TOKEN_NOT_FOUND" });
     }
 
-    if (!(await hashService.compare(refreshToken, tokenData.token_hash))) {
+    if (!(await tokenHashService.compareToken(refreshToken, tokenData.token_hash))) {
         throw unauthorized({ message: "Invalid refresh token", code: "INVALID_TOKEN" });
     }
 
@@ -148,7 +149,7 @@ const logoutAll = async (refreshToken) => {
         throw unauthorized({ message: "Refresh token not found", code: "TOKEN_NOT_FOUND" });
     }
 
-    if (!(await hashService.compare(refreshToken, tokenData.token_hash))) {
+    if (!(await tokenHashService.compareToken(refreshToken, tokenData.token_hash))) {
         throw unauthorized({ message: "Invalid refresh token", code: "INVALID_TOKEN" });
     }
 

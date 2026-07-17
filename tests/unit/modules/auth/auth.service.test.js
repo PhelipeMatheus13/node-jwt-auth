@@ -4,12 +4,14 @@ const hashService = require("../../../../src/shared/services/hash.service");
 const userService = require("../../../../src/modules/user/user.service");
 const jwtService = require("../../../../src/shared/services/jwt.service");
 const tokenService = require("../../../../src/modules/token/token.service");
+const tokenHashService = require("../../../../src/modules/auth/token-hash.service.js")
 const { getKnex } = require("../../../../src/shared/config/database")
 
 jest.mock("../../../../src/shared/services/hash.service");
 jest.mock("../../../../src/modules/user/user.service"); 
 jest.mock("../../../../src/shared/services/jwt.service");
 jest.mock("../../../../src/modules/token/token.service");
+jest.mock("../../../../src/modules/auth/token-hash.service.js");
 jest.mock("../../../../src/shared/config/database");
 
 
@@ -33,7 +35,7 @@ describe("Auth Service (Unit)", () => {
             exp: Math.floor(Date.now() / 1000) + (60 * 60) 
         };
 
-        it("should throw if fail in uuserService.findUserByEmail", async () => {
+        it("should throw if fail in userService.findUserByEmail", async () => {
             userService.findUserByEmail.mockRejectedValue(new Error("fake error"));
 
             await expect(authService.login("test@example.com", "testPassword@123"))
@@ -108,13 +110,13 @@ describe("Auth Service (Unit)", () => {
                 .rejects.toThrow("fake error");
         });
 
-        it("should throw if fail in hashService.hash", async () => {
+        it("should throw if fail in tokenHashService.hashToken", async () => {
             userService.findUserByEmail.mockResolvedValue(userData);
             hashService.compare.mockResolvedValue(true);
             jwtService.generateAccessToken.mockResolvedValue("access-token");
             jwtService.generateRefreshToken.mockResolvedValue("refresh-token");
             jwtService.decodeRefreshToken.mockResolvedValue(decodedRefreshToken);
-            hashService.hash.mockRejectedValue(new Error("fake error"));
+            tokenHashService.hashToken.mockRejectedValue(new Error("fake error"));
 
             await expect(authService.login("test@example.com", "testPassword@123"))
                 .rejects.toThrow("fake error");
@@ -126,7 +128,7 @@ describe("Auth Service (Unit)", () => {
             jwtService.generateAccessToken.mockReturnValue("access-token");
             jwtService.generateRefreshToken.mockReturnValue("refresh-token");
             jwtService.decodeRefreshToken.mockReturnValue(decodedRefreshToken);
-            hashService.hash.mockReturnValue("hashedToken");
+            tokenHashService.hashToken.mockReturnValue("hashedToken");
             tokenService.saveRefreshToken.mockRejectedValue(new Error("fake error"));
 
             await expect(authService.login("test@example.com", "testPassword@123"))
@@ -139,7 +141,7 @@ describe("Auth Service (Unit)", () => {
             jwtService.generateAccessToken.mockReturnValue("access-token");
             jwtService.generateRefreshToken.mockReturnValue("refresh-token");
             jwtService.decodeRefreshToken.mockReturnValue(decodedRefreshToken);
-            hashService.hash.mockReturnValue("hashedToken");
+            tokenHashService.hashToken.mockReturnValue("hashedToken");
             tokenService.saveRefreshToken.mockResolvedValue("token-id-123");
 
             const result = await authService.login("test@example.com", "testPassword@123");
@@ -147,7 +149,7 @@ describe("Auth Service (Unit)", () => {
             expect(jwtService.generateAccessToken).toHaveBeenCalledWith("uuid-123", "user");
             expect(jwtService.generateRefreshToken).toHaveBeenCalledWith("uuid-123", "user", expect.any(String));
             expect(jwtService.decodeRefreshToken).toHaveBeenCalledWith("refresh-token");
-            expect(hashService.hash).toHaveBeenCalledWith("refresh-token");
+            expect(tokenHashService.hashToken).toHaveBeenCalledWith("refresh-token");
             expect(tokenService.saveRefreshToken).toHaveBeenCalledWith({
                 tokenHash: "hashedToken",
                 userId: "uuid-123",
@@ -214,10 +216,10 @@ describe("Auth Service (Unit)", () => {
                 });
         });
 
-        it("should throw error if fail in hashService.compare", async () => {
+        it("should throw error if fail in tokenHashService.compareToken", async () => {
             jwtService.decodeRefreshToken.mockReturnValue(decodedOldRefreshToken);
             tokenService.findRefreshTokenByJti.mockResolvedValue(tokenData); 
-            hashService.compare.mockRejectedValue(new Error("fake error"));
+            tokenHashService.compareToken.mockRejectedValue(new Error("fake error"));
 
             await expect(authService.rotateTokens(oldRefreshToken))
                 .rejects.toThrow("fake error");
@@ -226,7 +228,7 @@ describe("Auth Service (Unit)", () => {
         it("should throw error an error if token not match with any stored token hash", async () => {
             jwtService.decodeRefreshToken.mockReturnValue(decodedOldRefreshToken);
             tokenService.findRefreshTokenByJti.mockResolvedValue(tokenData);
-            hashService.compare.mockResolvedValue(false);
+            tokenHashService.compareToken.mockResolvedValue(false);
 
             await expect(authService.rotateTokens(oldRefreshToken))
                 .rejects.toMatchObject({
@@ -244,7 +246,7 @@ describe("Auth Service (Unit)", () => {
                 jti: "jti-uuid-123",
                 revoked_at: new Date() // Simulate that the token has been revoked
             });
-            hashService.compare.mockResolvedValue(true); 
+            tokenHashService.compareToken.mockResolvedValue(true); 
             tokenService.revokeAllRefreshTokensByUserId.mockRejectedValue(new Error("fake error"));
 
             await expect(authService.rotateTokens(oldRefreshToken))
@@ -259,7 +261,7 @@ describe("Auth Service (Unit)", () => {
                 jti: "jti-uuid-123",
                 revoked_at: new Date() // Simulate that the token has been revoked
             });
-            hashService.compare.mockResolvedValue(true); 
+            tokenHashService.compareToken.mockResolvedValue(true); 
             tokenService.revokeAllRefreshTokensByUserId.mockReturnValue(1);
 
             await expect(authService.rotateTokens(oldRefreshToken))
@@ -273,7 +275,7 @@ describe("Auth Service (Unit)", () => {
         it("should throw error if fail in jwtService.generateAccessToken", async () => {
             jwtService.decodeRefreshToken.mockReturnValue(decodedOldRefreshToken);
             tokenService.findRefreshTokenByJti.mockResolvedValue(tokenData);
-            hashService.compare.mockResolvedValue(true); 
+            tokenHashService.compareToken.mockResolvedValue(true); 
             jwtService.generateAccessToken.mockImplementation(() => {
                 throw new Error("fake error");
             });
@@ -285,7 +287,7 @@ describe("Auth Service (Unit)", () => {
         it("should throw error if fail in jwtService.generateRefreshToken", async () => {
             jwtService.decodeRefreshToken.mockReturnValue(decodedOldRefreshToken);
             tokenService.findRefreshTokenByJti.mockResolvedValue(tokenData);
-            hashService.compare.mockResolvedValue(true); 
+            tokenHashService.compareToken.mockResolvedValue(true); 
             jwtService.generateAccessToken.mockReturnValue("new-access-token");
             jwtService.generateRefreshToken.mockImplementation(() => {
                 throw new Error("fake error");
@@ -295,14 +297,14 @@ describe("Auth Service (Unit)", () => {
                 .rejects.toThrow("fake error");
         });
 
-        it("should throw error if fail in hashService.hash", async () => {
+        it("should throw error if fail in tokenHashService.hashToken", async () => {
             jwtService.decodeRefreshToken.mockReturnValue(decodedOldRefreshToken);
             tokenService.findRefreshTokenByJti.mockResolvedValue(tokenData);
-            hashService.compare.mockResolvedValue(true); 
+            tokenHashService.compareToken.mockResolvedValue(true); 
             jwtService.generateAccessToken.mockReturnValue("new-access-token");
             jwtService.generateRefreshToken.mockReturnValue("new-refresh-token");
             jwtService.decodeRefreshToken.mockReturnValue(decodedNewRefreshToken);
-            hashService.hash.mockRejectedValue(new Error("fake error"));
+            tokenHashService.hashToken.mockRejectedValue(new Error("fake error"));
 
             await expect(authService.rotateTokens(oldRefreshToken)) 
                 .rejects.toThrow("fake error");
@@ -317,11 +319,11 @@ describe("Auth Service (Unit)", () => {
 
             jwtService.decodeRefreshToken.mockReturnValue(decodedOldRefreshToken);
             tokenService.findRefreshTokenByJti.mockResolvedValue(tokenData);
-            hashService.compare.mockResolvedValueOnce(true);
+            tokenHashService.compareToken.mockResolvedValueOnce(true);
             jwtService.generateAccessToken.mockReturnValue("new-access-token");
             jwtService.generateRefreshToken.mockReturnValue("new-refresh-token");
             jwtService.decodeRefreshToken.mockReturnValueOnce(decodedNewRefreshToken);
-            hashService.hash.mockReturnValue("new-hash-token");
+            tokenHashService.hashToken.mockReturnValue("new-hash-token");
             // in transaction
             tokenService.revokeRefreshTokenById.mockRejectedValue(new Error("fake error"));
 
@@ -338,11 +340,11 @@ describe("Auth Service (Unit)", () => {
 
             jwtService.decodeRefreshToken.mockReturnValue(decodedOldRefreshToken);
             tokenService.findRefreshTokenByJti.mockResolvedValue(tokenData);
-            hashService.compare.mockResolvedValueOnce(true);
+            tokenHashService.compareToken.mockResolvedValueOnce(true);
             jwtService.generateAccessToken.mockReturnValue("new-access-token");
             jwtService.generateRefreshToken.mockReturnValue("new-refresh-token");
             jwtService.decodeRefreshToken.mockReturnValueOnce(decodedNewRefreshToken);
-            hashService.hash.mockReturnValue("new-hash-token");
+            tokenHashService.hashToken.mockReturnValue("new-hash-token");
             // in transaction
             tokenService.revokeRefreshTokenById.mockReturnValue(0); // Simulate that no rows were updated
 
@@ -363,11 +365,11 @@ describe("Auth Service (Unit)", () => {
 
             jwtService.decodeRefreshToken.mockReturnValue(decodedOldRefreshToken);
             tokenService.findRefreshTokenByJti.mockResolvedValue(tokenData);
-            hashService.compare.mockResolvedValueOnce(true);
+            tokenHashService.compareToken.mockResolvedValueOnce(true);
             jwtService.generateAccessToken.mockReturnValue("new-access-token");
             jwtService.generateRefreshToken.mockReturnValue("new-refresh-token");
             jwtService.decodeRefreshToken.mockReturnValueOnce(decodedNewRefreshToken);
-            hashService.hash.mockReturnValue("new-hash-token");
+            tokenHashService.hashToken.mockReturnValue("new-hash-token");
             // in transaction
             tokenService.revokeRefreshTokenById.mockResolvedValue(1);
             tokenService.saveRefreshToken.mockRejectedValue(new Error("fake error"));
@@ -385,11 +387,11 @@ describe("Auth Service (Unit)", () => {
 
             jwtService.decodeRefreshToken.mockReturnValueOnce(decodedOldRefreshToken);
             tokenService.findRefreshTokenByJti.mockResolvedValue(tokenData);
-            hashService.compare.mockResolvedValueOnce(true);
+            tokenHashService.compareToken.mockResolvedValueOnce(true);
             jwtService.generateAccessToken.mockReturnValue("new-access-token");
             jwtService.generateRefreshToken.mockReturnValue("new-refresh-token");
             jwtService.decodeRefreshToken.mockReturnValueOnce(decodedNewRefreshToken);
-            hashService.hash.mockReturnValue("new-hash-token");
+            tokenHashService.hashToken.mockReturnValue("new-hash-token");
             // in transaction
             tokenService.revokeRefreshTokenById.mockResolvedValue(1);
             tokenService.saveRefreshToken.mockResolvedValue("token-id");
@@ -398,7 +400,7 @@ describe("Auth Service (Unit)", () => {
             
             expect(jwtService.decodeRefreshToken).toHaveBeenCalledWith(oldRefreshToken);
             expect(tokenService.findRefreshTokenByJti).toHaveBeenCalledWith(decodedOldRefreshToken.jti);
-            expect(hashService.compare).toHaveBeenCalledWith(oldRefreshToken, tokenData.token_hash);
+            expect(tokenHashService.compareToken).toHaveBeenCalledWith(oldRefreshToken, tokenData.token_hash);
             expect(jwtService.generateAccessToken).toHaveBeenCalledWith(decodedOldRefreshToken.id, decodedOldRefreshToken.role);
             expect(jwtService.generateRefreshToken).toHaveBeenCalledWith(
                 decodedOldRefreshToken.id,
@@ -406,7 +408,7 @@ describe("Auth Service (Unit)", () => {
                 expect.any(String) // jti is generated randomly, so we can't assert its exact value
             );
             expect(jwtService.decodeRefreshToken).toHaveBeenCalledWith("new-refresh-token");
-            expect(hashService.hash).toHaveBeenCalledWith("new-refresh-token");
+            expect(tokenHashService.hashToken).toHaveBeenCalledWith("new-refresh-token");
             expect(tokenService.revokeRefreshTokenById).toHaveBeenCalledWith(tokenData.id, trx);
             expect(tokenService.saveRefreshToken).toHaveBeenCalledWith({
                 tokenHash: "new-hash-token",
@@ -468,10 +470,10 @@ describe("Auth Service (Unit)", () => {
                 });
         });
 
-        it("should throw error if fail in hashService.compare", async () => {
+        it("should throw error if fail in tokenHashService.compareToken", async () => {
             jwtService.decodeRefreshToken.mockReturnValue(decodedToken);
             tokenService.findRefreshTokenByJti.mockResolvedValue(tokenData);
-            hashService.compare.mockRejectedValue(new Error("fake error"));
+            tokenHashService.compareToken.mockRejectedValue(new Error("fake error"));
 
             await expect(authService.logout(refreshToken))
                 .rejects.toThrow("fake error");
@@ -480,7 +482,7 @@ describe("Auth Service (Unit)", () => {
         it("should throw error an error if no hash matches", async () => {
             jwtService.decodeRefreshToken.mockReturnValue(decodedToken);
             tokenService.findRefreshTokenByJti.mockResolvedValue(tokenData);
-            hashService.compare.mockResolvedValueOnce(false);
+            tokenHashService.compareToken.mockResolvedValueOnce(false);
             
             await expect(authService.logout(refreshToken))
                 .rejects.toMatchObject({
@@ -498,7 +500,7 @@ describe("Auth Service (Unit)", () => {
                 jti: "jti-uuid-123",
                 revoked_at: new Date() // Simulate that the token has been revoked
             });
-            hashService.compare.mockResolvedValueOnce(true);
+            tokenHashService.compareToken.mockResolvedValueOnce(true);
             
             await expect(authService.logout(refreshToken));
         });
@@ -506,7 +508,7 @@ describe("Auth Service (Unit)", () => {
         it("should throw error if fail in tokenService.revokeRefreshTokenById", async () => {
             jwtService.decodeRefreshToken.mockReturnValue(decodedToken);
             tokenService.findRefreshTokenByJti.mockResolvedValue(tokenData);
-            hashService.compare.mockResolvedValueOnce(true);
+            tokenHashService.compareToken.mockResolvedValueOnce(true);
             tokenService.revokeRefreshTokenById.mockRejectedValue(new Error("fake error"));
  
             await expect(authService.logout(refreshToken))
@@ -516,7 +518,7 @@ describe("Auth Service (Unit)", () => {
         it("should logout successfully", async () => {
             jwtService.decodeRefreshToken.mockReturnValue(decodedToken);
             tokenService.findRefreshTokenByJti.mockResolvedValue(tokenData);
-            hashService.compare.mockResolvedValueOnce(true);
+            tokenHashService.compareToken.mockResolvedValueOnce(true);
             tokenService.revokeRefreshTokenById.mockResolvedValue(1); // knex returns number of rows deleted
 
             await expect(authService.logout(refreshToken))
@@ -524,7 +526,7 @@ describe("Auth Service (Unit)", () => {
 
             expect(jwtService.decodeRefreshToken).toHaveBeenCalledWith(refreshToken);
             expect(tokenService.findRefreshTokenByJti).toHaveBeenCalledWith(decodedToken.jti);
-            expect(hashService.compare).toHaveBeenCalledWith(refreshToken, tokenData.token_hash);
+            expect(tokenHashService.compareToken).toHaveBeenCalledWith(refreshToken, tokenData.token_hash);
             expect(tokenService.revokeRefreshTokenById).toHaveBeenCalledWith(tokenData.id);
         });
     });
@@ -575,10 +577,10 @@ describe("Auth Service (Unit)", () => {
                 });
         });
 
-        it("should throw error if fail in hashService.compare", async () => {
+        it("should throw error if fail in tokenHashService.compareToken", async () => {
             jwtService.decodeRefreshToken.mockReturnValue(decodedToken);
             tokenService.findRefreshTokenByJti.mockResolvedValue(tokenData);
-            hashService.compare.mockRejectedValue(new Error("fake error"));
+            tokenHashService.compareToken.mockRejectedValue(new Error("fake error"));
 
             await expect(authService.logoutAll(refreshToken))
                 .rejects.toThrow("fake error");
@@ -587,7 +589,7 @@ describe("Auth Service (Unit)", () => {
         it("should throw error an error if no hash match", async () => {
             jwtService.decodeRefreshToken.mockReturnValue(decodedToken);
             tokenService.findRefreshTokenByJti.mockResolvedValue(tokenData);
-            hashService.compare.mockResolvedValueOnce(false);
+            tokenHashService.compareToken.mockResolvedValueOnce(false);
             
             await expect(authService.logoutAll(refreshToken))
                 .rejects.toMatchObject({
@@ -600,7 +602,7 @@ describe("Auth Service (Unit)", () => {
         it("should throw error if fail in tokenService.revokeAllRefreshTokensByUserId", async () => {
             jwtService.decodeRefreshToken.mockReturnValue(decodedToken);
             tokenService.findRefreshTokenByJti.mockResolvedValue(tokenData);
-            hashService.compare.mockResolvedValueOnce(true);
+            tokenHashService.compareToken.mockResolvedValueOnce(true);
             tokenService.revokeAllRefreshTokensByUserId.mockRejectedValue(new Error("fake error"));
 
             await expect(authService.logoutAll(refreshToken))
@@ -610,7 +612,7 @@ describe("Auth Service (Unit)", () => {
         it("should logoutAll successfully", async () => {
             jwtService.decodeRefreshToken.mockReturnValue(decodedToken);
             tokenService.findRefreshTokenByJti.mockResolvedValue(tokenData);
-            hashService.compare.mockResolvedValueOnce(true);
+            tokenHashService.compareToken.mockResolvedValueOnce(true);
             tokenService.revokeAllRefreshTokensByUserId.mockResolvedValue(2); // knex returns number of rows deleted
 
             await expect(authService.logoutAll(refreshToken))
@@ -618,7 +620,7 @@ describe("Auth Service (Unit)", () => {
 
             expect(jwtService.decodeRefreshToken).toHaveBeenCalledWith(refreshToken);
             expect(tokenService.findRefreshTokenByJti).toHaveBeenCalledWith(decodedToken.jti);
-            expect(hashService.compare).toHaveBeenCalledWith(refreshToken, tokenData.token_hash);
+            expect(tokenHashService.compareToken).toHaveBeenCalledWith(refreshToken, tokenData.token_hash);
             expect(tokenService.revokeAllRefreshTokensByUserId).toHaveBeenCalledWith(tokenData.user_id);
         });
     });
