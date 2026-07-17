@@ -43,10 +43,13 @@ const logger = pino({
         censor: "**REDACTED**",
     }, 
     
-    // It is called whenever a log is issued   
+    // Must return a NEW object (not the live context reference) 
+    // mixinMergeStrategy mutates whatever mixin returns, which would permanently
+    // pollute the AsyncLocalStorage store with fields from any single log call. 
+    // Now returns a fresh copy on each log call (dies shortly after being used in that specific log)
     mixin: () => {
         const context = getContext();
-        return context ?? {};
+        return context ? { ...context } : {};
     },
 });
 
