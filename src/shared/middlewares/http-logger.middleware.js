@@ -28,7 +28,6 @@ const httpLogger = pinoHttp({
         req: (req) => ({
             method: req.method,
             url: req.url,
-            id: req.id,
             userAgent: req.headers["user-agent"], // show where the request is coming from
         }),
         res: (res) => ({
