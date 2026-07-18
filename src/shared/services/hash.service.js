@@ -2,23 +2,23 @@ const bcrypt = require("bcrypt");
 const logger = require("../../shared/utils/logger");
 const { internal } = require("../../shared/errors/errors");
 
-const hash = async (value) => {
+const hashPassword = async (password) => {
     try {
         const salt = await bcrypt.genSalt(12);
-        return await bcrypt.hash(value, salt);
+        return await bcrypt.hash(password, salt);
     } catch (error) {
-        logger.error({ err: error }, "Bcrypt hashing error:");
-        throw internal({ message: "Failed to process hash" });
+        logger.error({ err: error }, "Bcrypt password hashing error");
+        throw internal({ message: "Failed to process password hash" });
     }
 };
 
-const compare = async (value, hashedValue) => {
+const comparePassword = async (password, hash) => {
     try {
-        return await bcrypt.compare(value, hashedValue);
+        return await bcrypt.compare(password, hash);
     } catch (error) {
-        logger.error({ err: error }, "Bcrypt compare error:");
-        throw internal({ message: "Failed to compare hash" });
+        logger.error({ err: error }, "Bcrypt password compare error");
+        throw internal({ message: "Failed to compare password hash" });
     }
 };
 
-module.exports = { hash, compare };
+module.exports = { hashPassword, comparePassword };
