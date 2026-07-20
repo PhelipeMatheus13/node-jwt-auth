@@ -6,7 +6,7 @@
   "scripts": {
     "start": "cross-env NODE_ENV=development nodemon src/server.js",
     "test": "cross-env NODE_ENV=test jest --watchAll --detectOpenHandles",
-    "test:ci": "cross-env NODE_ENV=test jest --coverage --forceExit --detectOpenHandles",
+    "test:ci": "cross-env NODE_ENV=test jest --forceExit --detectOpenHandles",
     "test:unit": "cross-env NODE_ENV=test jest --testPathPatterns=tests/unit --forceExit --detectOpenHandles",
     "test:integration": "cross-env NODE_ENV=test jest --testPathPatterns=tests/integration --forceExit --detectOpenHandles"
   },
@@ -38,7 +38,6 @@
     "testEnvironment": "node",
     "testTimeout": 30000,
     "verbose": true,
-    "collectCoverage": true,
     "coverageDirectory": "coverage",
     "coverageReporters": [
       "text",
