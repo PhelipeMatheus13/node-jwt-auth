@@ -35,6 +35,16 @@ describe("Auth Service (Unit)", () => {
             exp: Math.floor(Date.now() / 1000) + (60 * 60) 
         };
 
+        const setupLoginSuccessMocks = () => {
+            userService.findUserByEmail.mockResolvedValue(userData);
+            hashService.comparePassword.mockResolvedValue(true);
+            jwtService.generateAccessToken.mockReturnValue("access-token");
+            jwtService.generateRefreshToken.mockReturnValue("refresh-token");
+            jwtService.decodeRefreshToken.mockReturnValue(decodedRefreshToken);
+            tokenHashService.hashToken.mockReturnValue("hashedToken");
+            tokenService.saveRefreshToken.mockResolvedValue("token-id-123");
+        };
+
         it("should throw if fail in userService.findUserByEmail", async () => {
             userService.findUserByEmail.mockRejectedValue(new Error("fake error"));
 
@@ -74,8 +84,7 @@ describe("Auth Service (Unit)", () => {
         });
 
         it("should throw if fail in jwtService.generateAccessToken", async () => {
-            userService.findUserByEmail.mockResolvedValue(userData);
-            hashService.comparePassword.mockResolvedValue(true);
+            setupLoginSuccessMocks();
             jwtService.generateAccessToken.mockImplementation(() => {
                 throw new Error("fake error");
             });
@@ -85,9 +94,7 @@ describe("Auth Service (Unit)", () => {
         });
 
         it("should throw if fail in jwtService.generateRefreshToken", async () => {
-            userService.findUserByEmail.mockResolvedValue(userData);
-            hashService.comparePassword.mockResolvedValue(true);
-            jwtService.generateAccessToken.mockResolvedValue("access-token");
+            setupLoginSuccessMocks();
             jwtService.generateRefreshToken.mockImplementation(() => {
                 throw new Error("fake error");
             });
@@ -98,10 +105,7 @@ describe("Auth Service (Unit)", () => {
 
 
         it("should throw if fail in jwtService.decodeRefreshToken", async () => {
-            userService.findUserByEmail.mockResolvedValue(userData);
-            hashService.comparePassword.mockResolvedValue(true);
-            jwtService.generateAccessToken.mockResolvedValue("access-token");
-            jwtService.generateRefreshToken.mockResolvedValue("refresh-token");
+            setupLoginSuccessMocks();
             jwtService.decodeRefreshToken.mockImplementation(() => {
                 throw new Error("fake error");
             });
@@ -111,11 +115,7 @@ describe("Auth Service (Unit)", () => {
         });
 
         it("should throw if fail in tokenHashService.hashToken", async () => {
-            userService.findUserByEmail.mockResolvedValue(userData);
-            hashService.comparePassword.mockResolvedValue(true);
-            jwtService.generateAccessToken.mockResolvedValue("access-token");
-            jwtService.generateRefreshToken.mockResolvedValue("refresh-token");
-            jwtService.decodeRefreshToken.mockResolvedValue(decodedRefreshToken);
+            setupLoginSuccessMocks();
             tokenHashService.hashToken.mockRejectedValue(new Error("fake error"));
 
             await expect(authService.login("test@example.com", "testPassword@123"))
@@ -123,12 +123,7 @@ describe("Auth Service (Unit)", () => {
         });
 
         it("should throw if fail in tokenService.saveRefreshToken", async () => {
-            userService.findUserByEmail.mockResolvedValue(userData);
-            hashService.comparePassword.mockResolvedValue(true);
-            jwtService.generateAccessToken.mockReturnValue("access-token");
-            jwtService.generateRefreshToken.mockReturnValue("refresh-token");
-            jwtService.decodeRefreshToken.mockReturnValue(decodedRefreshToken);
-            tokenHashService.hashToken.mockReturnValue("hashedToken");
+            setupLoginSuccessMocks();
             tokenService.saveRefreshToken.mockRejectedValue(new Error("fake error"));
 
             await expect(authService.login("test@example.com", "testPassword@123"))
@@ -136,13 +131,7 @@ describe("Auth Service (Unit)", () => {
         });   
         
         it("should login successfully", async () => {
-            userService.findUserByEmail.mockResolvedValue(userData);
-            hashService.comparePassword.mockResolvedValue(true);
-            jwtService.generateAccessToken.mockReturnValue("access-token");
-            jwtService.generateRefreshToken.mockReturnValue("refresh-token");
-            jwtService.decodeRefreshToken.mockReturnValue(decodedRefreshToken);
-            tokenHashService.hashToken.mockReturnValue("hashedToken");
-            tokenService.saveRefreshToken.mockResolvedValue("token-id-123");
+            setupLoginSuccessMocks();
 
             const result = await authService.login("test@example.com", "testPassword@123");
 
@@ -187,6 +176,29 @@ describe("Auth Service (Unit)", () => {
             exp: Math.floor(Date.now() / 1000) + (2 * 60 * 60) 
         };
 
+        const setupRotateTokensSuccessMocks = () => {
+            // Mocking the transaction behavior of Knex
+            const trx = {};
+            getKnex.mockReturnValue({
+                transaction: jest.fn(async (callback) => callback(trx))
+            });
+
+            jwtService.decodeRefreshToken
+                .mockReturnValueOnce(decodedOldRefreshToken)   // first call
+                .mockReturnValueOnce(decodedNewRefreshToken);  // second call
+
+            tokenService.findRefreshTokenByJti.mockResolvedValue(tokenData);
+            tokenHashService.compareToken.mockResolvedValue(true);
+            jwtService.generateAccessToken.mockReturnValue("new-access-token");
+            jwtService.generateRefreshToken.mockReturnValue("new-refresh-token");
+            tokenHashService.hashToken.mockReturnValue("new-hash-token");
+            // in transaction
+            tokenService.revokeRefreshTokenById.mockResolvedValue(1);
+            tokenService.saveRefreshToken.mockResolvedValue("token-id");
+
+            return { trx }; // Return the transaction object for success case assertions
+        }
+
         it("should throw error if fail to decode refresh token", async () => {
             jwtService.decodeRefreshToken.mockImplementation(() => {
                 throw new Error("fake error");
@@ -217,8 +229,7 @@ describe("Auth Service (Unit)", () => {
         });
 
         it("should throw error if fail in tokenHashService.compareToken", async () => {
-            jwtService.decodeRefreshToken.mockReturnValue(decodedOldRefreshToken);
-            tokenService.findRefreshTokenByJti.mockResolvedValue(tokenData); 
+            setupRotateTokensSuccessMocks();
             tokenHashService.compareToken.mockRejectedValue(new Error("fake error"));
 
             await expect(authService.rotateTokens(oldRefreshToken))
@@ -226,8 +237,7 @@ describe("Auth Service (Unit)", () => {
         });
 
         it("should throw error an error if token not match with any stored token hash", async () => {
-            jwtService.decodeRefreshToken.mockReturnValue(decodedOldRefreshToken);
-            tokenService.findRefreshTokenByJti.mockResolvedValue(tokenData);
+            setupRotateTokensSuccessMocks();
             tokenHashService.compareToken.mockResolvedValue(false);
 
             await expect(authService.rotateTokens(oldRefreshToken))
@@ -273,9 +283,7 @@ describe("Auth Service (Unit)", () => {
         });
 
         it("should throw error if fail in jwtService.generateAccessToken", async () => {
-            jwtService.decodeRefreshToken.mockReturnValue(decodedOldRefreshToken);
-            tokenService.findRefreshTokenByJti.mockResolvedValue(tokenData);
-            tokenHashService.compareToken.mockResolvedValue(true); 
+            setupRotateTokensSuccessMocks();
             jwtService.generateAccessToken.mockImplementation(() => {
                 throw new Error("fake error");
             });
@@ -285,10 +293,7 @@ describe("Auth Service (Unit)", () => {
         });
 
         it("should throw error if fail in jwtService.generateRefreshToken", async () => {
-            jwtService.decodeRefreshToken.mockReturnValue(decodedOldRefreshToken);
-            tokenService.findRefreshTokenByJti.mockResolvedValue(tokenData);
-            tokenHashService.compareToken.mockResolvedValue(true); 
-            jwtService.generateAccessToken.mockReturnValue("new-access-token");
+            setupRotateTokensSuccessMocks();
             jwtService.generateRefreshToken.mockImplementation(() => {
                 throw new Error("fake error");
             });
@@ -298,12 +303,7 @@ describe("Auth Service (Unit)", () => {
         });
 
         it("should throw error if fail in tokenHashService.hashToken", async () => {
-            jwtService.decodeRefreshToken.mockReturnValue(decodedOldRefreshToken);
-            tokenService.findRefreshTokenByJti.mockResolvedValue(tokenData);
-            tokenHashService.compareToken.mockResolvedValue(true); 
-            jwtService.generateAccessToken.mockReturnValue("new-access-token");
-            jwtService.generateRefreshToken.mockReturnValue("new-refresh-token");
-            jwtService.decodeRefreshToken.mockReturnValue(decodedNewRefreshToken);
+            setupRotateTokensSuccessMocks();
             tokenHashService.hashToken.mockRejectedValue(new Error("fake error"));
 
             await expect(authService.rotateTokens(oldRefreshToken)) 
@@ -311,20 +311,7 @@ describe("Auth Service (Unit)", () => {
         });
 
         it("should throw error if fail in transaction tokenService.revokeRefreshTokenById", async () => {
-            // Mocking the transaction behavior of Knex
-            const trx = {};
-            getKnex.mockReturnValue({
-                transaction: jest.fn(async (callback) => callback(trx))
-            });
-
-            jwtService.decodeRefreshToken.mockReturnValue(decodedOldRefreshToken);
-            tokenService.findRefreshTokenByJti.mockResolvedValue(tokenData);
-            tokenHashService.compareToken.mockResolvedValueOnce(true);
-            jwtService.generateAccessToken.mockReturnValue("new-access-token");
-            jwtService.generateRefreshToken.mockReturnValue("new-refresh-token");
-            jwtService.decodeRefreshToken.mockReturnValueOnce(decodedNewRefreshToken);
-            tokenHashService.hashToken.mockReturnValue("new-hash-token");
-            // in transaction
+            setupRotateTokensSuccessMocks();
             tokenService.revokeRefreshTokenById.mockRejectedValue(new Error("fake error"));
 
             await expect(authService.rotateTokens(oldRefreshToken))
@@ -332,20 +319,7 @@ describe("Auth Service (Unit)", () => {
         });
 
         it("should throw error if tokenService.revokeRefreshTokenById return 0 rows updated", async () => {
-            // Mocking the transaction behavior of Knex
-            const trx = {};
-            getKnex.mockReturnValue({
-                transaction: jest.fn(async (callback) => callback(trx))
-            });
-
-            jwtService.decodeRefreshToken.mockReturnValue(decodedOldRefreshToken);
-            tokenService.findRefreshTokenByJti.mockResolvedValue(tokenData);
-            tokenHashService.compareToken.mockResolvedValueOnce(true);
-            jwtService.generateAccessToken.mockReturnValue("new-access-token");
-            jwtService.generateRefreshToken.mockReturnValue("new-refresh-token");
-            jwtService.decodeRefreshToken.mockReturnValueOnce(decodedNewRefreshToken);
-            tokenHashService.hashToken.mockReturnValue("new-hash-token");
-            // in transaction
+            setupRotateTokensSuccessMocks();
             tokenService.revokeRefreshTokenById.mockReturnValue(0); // Simulate that no rows were updated
 
             await expect(authService.rotateTokens(oldRefreshToken))
@@ -357,21 +331,7 @@ describe("Auth Service (Unit)", () => {
         });
 
         it("should throw error if fail in transaction tokenService.saveRefreshToken", async () => {
-            // Mocking the transaction behavior of Knex
-            const trx = {};
-            getKnex.mockReturnValue({
-                transaction: jest.fn(async (callback) => callback(trx))
-            });
-
-            jwtService.decodeRefreshToken.mockReturnValue(decodedOldRefreshToken);
-            tokenService.findRefreshTokenByJti.mockResolvedValue(tokenData);
-            tokenHashService.compareToken.mockResolvedValueOnce(true);
-            jwtService.generateAccessToken.mockReturnValue("new-access-token");
-            jwtService.generateRefreshToken.mockReturnValue("new-refresh-token");
-            jwtService.decodeRefreshToken.mockReturnValueOnce(decodedNewRefreshToken);
-            tokenHashService.hashToken.mockReturnValue("new-hash-token");
-            // in transaction
-            tokenService.revokeRefreshTokenById.mockResolvedValue(1);
+            setupRotateTokensSuccessMocks();
             tokenService.saveRefreshToken.mockRejectedValue(new Error("fake error"));
 
             await expect(authService.rotateTokens(oldRefreshToken))
@@ -379,22 +339,7 @@ describe("Auth Service (Unit)", () => {
         });
 
         it("should refresh access token successfully", async () => {
-            // Mocking the transaction behavior of Knex
-            const trx = {};
-            getKnex.mockReturnValue({
-                transaction: jest.fn(async (callback) => callback(trx))
-            });
-
-            jwtService.decodeRefreshToken.mockReturnValueOnce(decodedOldRefreshToken);
-            tokenService.findRefreshTokenByJti.mockResolvedValue(tokenData);
-            tokenHashService.compareToken.mockResolvedValueOnce(true);
-            jwtService.generateAccessToken.mockReturnValue("new-access-token");
-            jwtService.generateRefreshToken.mockReturnValue("new-refresh-token");
-            jwtService.decodeRefreshToken.mockReturnValueOnce(decodedNewRefreshToken);
-            tokenHashService.hashToken.mockReturnValue("new-hash-token");
-            // in transaction
-            tokenService.revokeRefreshTokenById.mockResolvedValue(1);
-            tokenService.saveRefreshToken.mockResolvedValue("token-id");
+            const { trx } = setupRotateTokensSuccessMocks();
 
             const result = await authService.rotateTokens(oldRefreshToken);
             
@@ -441,6 +386,13 @@ describe("Auth Service (Unit)", () => {
             revoked_at: null
         };
 
+        const setupLogoutSuccessMocks = () => {
+            jwtService.decodeRefreshToken.mockReturnValue(decodedToken);
+            tokenService.findRefreshTokenByJti.mockResolvedValue(tokenData);
+            tokenHashService.compareToken.mockResolvedValue(true);
+            tokenService.revokeRefreshTokenById.mockResolvedValue(1); // knex returns number of rows deleted
+        }
+
         it("should throw error if fail in jwtService.decodeRefreshToken", async () => {
             jwtService.decodeRefreshToken.mockImplementation(() => {
                 throw new Error("fake error");
@@ -471,8 +423,7 @@ describe("Auth Service (Unit)", () => {
         });
 
         it("should throw error if fail in tokenHashService.compareToken", async () => {
-            jwtService.decodeRefreshToken.mockReturnValue(decodedToken);
-            tokenService.findRefreshTokenByJti.mockResolvedValue(tokenData);
+            setupLogoutSuccessMocks();
             tokenHashService.compareToken.mockRejectedValue(new Error("fake error"));
 
             await expect(authService.logout(refreshToken))
@@ -480,9 +431,8 @@ describe("Auth Service (Unit)", () => {
         });
 
         it("should throw error an error if no hash matches", async () => {
-            jwtService.decodeRefreshToken.mockReturnValue(decodedToken);
-            tokenService.findRefreshTokenByJti.mockResolvedValue(tokenData);
-            tokenHashService.compareToken.mockResolvedValueOnce(false);
+            setupLogoutSuccessMocks();
+            tokenHashService.compareToken.mockResolvedValue(false);
             
             await expect(authService.logout(refreshToken))
                 .rejects.toMatchObject({
@@ -506,9 +456,7 @@ describe("Auth Service (Unit)", () => {
         });
 
         it("should throw error if fail in tokenService.revokeRefreshTokenById", async () => {
-            jwtService.decodeRefreshToken.mockReturnValue(decodedToken);
-            tokenService.findRefreshTokenByJti.mockResolvedValue(tokenData);
-            tokenHashService.compareToken.mockResolvedValueOnce(true);
+            setupLogoutSuccessMocks();
             tokenService.revokeRefreshTokenById.mockRejectedValue(new Error("fake error"));
  
             await expect(authService.logout(refreshToken))
@@ -516,10 +464,7 @@ describe("Auth Service (Unit)", () => {
         });
 
         it("should logout successfully", async () => {
-            jwtService.decodeRefreshToken.mockReturnValue(decodedToken);
-            tokenService.findRefreshTokenByJti.mockResolvedValue(tokenData);
-            tokenHashService.compareToken.mockResolvedValueOnce(true);
-            tokenService.revokeRefreshTokenById.mockResolvedValue(1); // knex returns number of rows deleted
+            setupLogoutSuccessMocks();
 
             await expect(authService.logout(refreshToken))
                 .resolves.toBe(1);
@@ -547,6 +492,13 @@ describe("Auth Service (Unit)", () => {
             jti: "jti-uuid-123",
             revoked_at: null
         };
+
+        const setuplogoutAllSuccessMocks = () => {
+            jwtService.decodeRefreshToken.mockReturnValue(decodedToken);
+            tokenService.findRefreshTokenByJti.mockResolvedValue(tokenData);
+            tokenHashService.compareToken.mockResolvedValue(true);
+            tokenService.revokeAllRefreshTokensByUserId.mockResolvedValue(2); // knex returns number of rows deleted
+        }
 
         it("should throw error if fail in jwtService.decodeRefreshToken", async () => {
             jwtService.decodeRefreshToken.mockImplementation(() => {
@@ -578,8 +530,7 @@ describe("Auth Service (Unit)", () => {
         });
 
         it("should throw error if fail in tokenHashService.compareToken", async () => {
-            jwtService.decodeRefreshToken.mockReturnValue(decodedToken);
-            tokenService.findRefreshTokenByJti.mockResolvedValue(tokenData);
+            setuplogoutAllSuccessMocks();
             tokenHashService.compareToken.mockRejectedValue(new Error("fake error"));
 
             await expect(authService.logoutAll(refreshToken))
@@ -587,9 +538,8 @@ describe("Auth Service (Unit)", () => {
         });
 
         it("should throw error an error if no hash match", async () => {
-            jwtService.decodeRefreshToken.mockReturnValue(decodedToken);
-            tokenService.findRefreshTokenByJti.mockResolvedValue(tokenData);
-            tokenHashService.compareToken.mockResolvedValueOnce(false);
+            setuplogoutAllSuccessMocks();
+            tokenHashService.compareToken.mockResolvedValue(false);
             
             await expect(authService.logoutAll(refreshToken))
                 .rejects.toMatchObject({
@@ -600,9 +550,7 @@ describe("Auth Service (Unit)", () => {
         });
 
         it("should throw error if fail in tokenService.revokeAllRefreshTokensByUserId", async () => {
-            jwtService.decodeRefreshToken.mockReturnValue(decodedToken);
-            tokenService.findRefreshTokenByJti.mockResolvedValue(tokenData);
-            tokenHashService.compareToken.mockResolvedValueOnce(true);
+            setuplogoutAllSuccessMocks();
             tokenService.revokeAllRefreshTokensByUserId.mockRejectedValue(new Error("fake error"));
 
             await expect(authService.logoutAll(refreshToken))
@@ -610,11 +558,8 @@ describe("Auth Service (Unit)", () => {
         });
 
         it("should logoutAll successfully", async () => {
-            jwtService.decodeRefreshToken.mockReturnValue(decodedToken);
-            tokenService.findRefreshTokenByJti.mockResolvedValue(tokenData);
-            tokenHashService.compareToken.mockResolvedValueOnce(true);
-            tokenService.revokeAllRefreshTokensByUserId.mockResolvedValue(2); // knex returns number of rows deleted
-
+            setuplogoutAllSuccessMocks();
+            
             await expect(authService.logoutAll(refreshToken))
                 .resolves.toBe(2);
 
