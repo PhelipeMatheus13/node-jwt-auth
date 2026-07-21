@@ -23,7 +23,9 @@
     "knex": "^3.2.9",
     "pg": "^8.20.0",
     "pino": "^10.3.1",
-    "pino-http": "^11.0.0"
+    "pino-http": "^11.0.0",
+    "swagger-jsdoc": "^6.3.0",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "@testcontainers/postgresql": "^11.14.0",
@@ -43,14 +45,14 @@
       "text",
       "lcov"
     ],
-    "collectCoverageFrom": [ 
+    "collectCoverageFrom": [
       "src/**/*.js"
     ],
     "coveragePathIgnorePatterns": [
       "/src/server.js",
       "/src/app.js",
       "/src/shared/config/database.js",
-      "/src/shared/middlewares/http-logger.middleware.js", 
+      "/src/shared/middlewares/http-logger.middleware.js",
       "/src/shared/utils/logger.js"
     ]
   }
