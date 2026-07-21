@@ -14,9 +14,9 @@
  *                          code:
  *                              type: string
  *                              example: "ERROR_CODE"
- *                      message:
- *                          type: string
- *                          example: "Error description"
+ *                          message:
+ *                              type: string
+ *                              example: "Error description"
  *          LoginInput:
  *              type: object
  *              required: [email, password]

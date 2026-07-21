@@ -10,7 +10,7 @@
  *                          allOf:
  *                              - $ref: '#/components/schemas/Error'
  *                              - type: object
- *                                  properties:
+ *                                properties:
  *                                      error: 
  *                                          properties:
  *                                              code:
@@ -25,7 +25,7 @@
  *                          allOf:
  *                              - $ref: '#/components/schemas/Error'
  *                              - type: object
- *                                  properties:
+ *                                properties:
  *                                      error: 
  *                                          properties:
  *                                              code:
@@ -40,7 +40,7 @@
  *                          allOf:
  *                              - $ref: '#/components/schemas/Error'
  *                              - type: object
- *                                  properties:
+ *                                properties:
  *                                      error: 
  *                                          properties:
  *                                              code:
@@ -55,7 +55,7 @@
  *                          allOf:
  *                              - $ref: '#/components/schemas/Error'
  *                              - type: object
- *                                  properties:
+ *                                properties:
  *                                      error: 
  *                                          properties:
  *                                              code:
@@ -70,7 +70,7 @@
  *                          allOf:
  *                              - $ref: '#/components/schemas/Error'
  *                              - type: object
- *                                  properties:
+ *                                properties:
  *                                      error: 
  *                                          properties:
  *                                              code:
@@ -85,7 +85,7 @@
  *                          allOf:
  *                              - $ref: '#/components/schemas/Error'
  *                              - type: object
- *                                  properties:
+ *                                properties:
  *                                      error: 
  *                                          properties:
  *                                              code:
@@ -100,7 +100,7 @@
  *                          allOf:
  *                              - $ref: '#/components/schemas/Error'
  *                              - type: object
- *                                  properties:
+ *                                properties:
  *                                      error: 
  *                                          properties:
  *                                              code:
@@ -120,7 +120,7 @@
  *                          allOf:
  *                              - $ref: '#/components/schemas/Error'
  *                              - type: object
- *                                  properties:
+ *                                properties:
  *                                      error: 
  *                                          properties:
  *                                              code:
