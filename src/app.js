@@ -1,9 +1,10 @@
 const express = require("express");
 const httpLogger = require("./shared/middlewares/http-logger.middleware");
-const errorHandler = require("./shared/middlewares/error.middleware")
+const errorHandler = require("./shared/middlewares/error.middleware");
 const requestContextMiddleware = require("./shared/middlewares/request-context.middleware");
 
 // Import routes
+const swaggerRoutes = require("./shared/docs/swagger.routes");
 const authRoutes = require("./modules/auth/auth.routes");
 const userRoutes = require("./modules/user/user.routes");
 
@@ -29,6 +30,7 @@ app.get("/", (req, res) => {
 // config routes
 app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
+app.use("/api-docs", swaggerRoutes);
 
 // handler for error
 app.use(errorHandler); 
