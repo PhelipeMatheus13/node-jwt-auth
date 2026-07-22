@@ -7,11 +7,26 @@ const options = {
 			title: "JWT Authentication API",
 			version: "1.0.0",
 			description: "Authentication API with JWT",
+			contact: {
+				name: "Phelipe Matheus",
+				email: "phelipematheus134@gmail.com",
+				url: "https://github.com/PhelipeMatheus13",
+			},
 		},
 		servers: [
 			{
 				url: "http://localhost:3000",
 				description: "Development server",
+			},
+		],
+		tags: [
+			{
+				name: "Auth",
+				description: "Authentication endpoints",
+			},
+			{
+				name: "User",
+				description: "User manegement",
 			},
 		],
 		components: {
