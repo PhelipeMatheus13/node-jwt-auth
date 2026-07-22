@@ -111,7 +111,7 @@
  *                                                  type: array 
  *                                                  items:
  *                                                      type: object
- *                                                  example: [{"msg":"Name is required","param":"name","location":"body"}]                         
+ *                                                  example: [{"type":"field","value":"","msg":"Name is required","path":"name","location":"body"}]                         
  *          InternalError:
  *              description: Internal error
  *              content:
