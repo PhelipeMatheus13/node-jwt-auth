@@ -1,5 +1,5 @@
 const { body, validationResult } = require("express-validator");
-const {unprocessable} = require("../../shared/errors/errors");
+const { unprocessable } = require("../../shared/errors/errors");
 
 
 /**
@@ -10,9 +10,10 @@ const {unprocessable} = require("../../shared/errors/errors");
  */
 const validateLogin = [
     body("email")
-        .notEmpty().withMessage("Email is required")
-        .isEmail().withMessage("Please provide a valid email address")
-        .normalizeEmail(),
+        .trim()
+        .notEmpty().withMessage("Email is required").bail()
+        .normalizeEmail()
+        .isEmail().withMessage("Please provide a valid email address"),
 
     body("password")
         .notEmpty().withMessage("Password is required"),
@@ -22,7 +23,10 @@ const validateLogin = [
         if (!errors.isEmpty()) {
             return next(unprocessable({
                 message: 'Validation failed',
-                details: errors.array()
+                details: errors.array().map(error => ({
+                    field: error.path, 
+                    message: error.msg,
+                })),
             }));
         }
         next();

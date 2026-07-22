@@ -9,22 +9,23 @@ const {unprocessable} = require("../../shared/errors/errors");
  */
 const validateRegister = [
     body("name")
-        .notEmpty().withMessage("Name is required")
-        .isLength({ min: 3 }).withMessage("Name must be at least 3 characters long")
-        .trim(),
+        .trim()
+        .notEmpty().withMessage("Name is required").bail()
+        .isLength({ min: 3 }).withMessage("Name must be at least 3 characters long"),
 
     body("email")
-        .notEmpty().withMessage("Email is required")
-        .isEmail().withMessage("Please provide a valid email address")
-        .normalizeEmail(),
+        .trim()
+        .notEmpty().withMessage("Email is required").bail()
+        .normalizeEmail()
+        .isEmail().withMessage("Please provide a valid email address"),
 
     body("password")
-        .notEmpty().withMessage("Password is required")
-        .isLength({ min: 6 }).withMessage("Password must be at least 6 characters long")
+        .notEmpty().withMessage("Password is required").bail()
+        .isLength({ min: 6 }).withMessage("Password must be at least 6 characters long").bail()
         .matches(/[!@#$%^&*(),.?":{}|<>]/).withMessage("Password must contain at least one special character"),
 
     body("confirmPassword")
-        .notEmpty().withMessage("Password confirmation is required")
+        .notEmpty().withMessage("Password confirmation is required").bail()
         .custom((value, { req }) => value === req.body.password).withMessage("Passwords do not match"),
 
     (req, res, next) => {
@@ -32,7 +33,10 @@ const validateRegister = [
         if (!errors.isEmpty()) {
             return next(unprocessable({
                 message: 'Validation failed',
-                details: errors.array()
+                details: errors.array().map(error => ({
+                    field: error.path,
+                    message: error.msg,
+                })),
             }));
         }
         next();
