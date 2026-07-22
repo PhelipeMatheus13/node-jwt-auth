@@ -57,7 +57,7 @@ describe("User Routes (Integration)", () => {
                 message: "Validation failed"
             });
             expect(res.body.error.details).toBeDefined();
-            expect(res.body.error.details[0].msg).toMatch(/at least 6 characters/);
+            expect(res.body.error.details[0].message).toMatch(/at least 6 characters/);
         });
     });
 
