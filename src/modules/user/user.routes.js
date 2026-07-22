@@ -91,7 +91,7 @@ router.get("/:id", checkToken, authorize("admin", "user"), userController.getUse
  *                schema:
  *                    type: string
  *          responses:
- *              204:
+ *              200:
  *                  description: User deleted successfully, no content returned
  *              401:
  *                  $ref: '#/components/responses/Unauthorized'
