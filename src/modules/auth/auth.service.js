@@ -8,45 +8,7 @@ const {unauthorized} = require("../../shared/errors/errors");
 const { getKnex } = require("../../shared/config/database");
 const { randomUUID } = require("crypto");  
 
-const login = async (email, password) => {
-    // Find user by email, including password hash for validation
-    const userData = await userService.findUserByEmail(email);
- 
-    // For security reasons, any errors will be treated as invalid here
-    if (!userData || !(await hashService.comparePassword(password, userData.password))) {
-        throw unauthorized({
-            message: "Invalid email or password",
-            code: "INVALID_CREDENTIALS",
-        });
-    }
 
-    const accessToken = jwtService.generateAccessToken(
-        userData.id, 
-        userData.role
-    );
-
-    const refreshToken = jwtService.generateRefreshToken(
-        userData.id, 
-        userData.role, 
-        randomUUID()
-    );
-
-    const decoded = jwtService.decodeRefreshToken(refreshToken);
-    // hash refresh token before saving in database
-    const hashedToken = await tokenHashService.hashToken(refreshToken);
-
-    await tokenService.saveRefreshToken({
-        tokenHash: hashedToken,
-        userId: userData.id,
-        jti: decoded.jti,
-        expiresAt: new Date(decoded.exp * 1000) 
-    });
-
-    return {
-        accessToken,
-        refreshToken
-    };
-};
 
 const rotateTokens = async (oldRefreshToken) => {
     const oldRefreshDecoded = jwtService.decodeRefreshToken(oldRefreshToken);
