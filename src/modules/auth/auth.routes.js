@@ -192,6 +192,8 @@ router.post("/logout", authController.logout);
  *                                  $ref: '#/components/examples/InvalidRefreshToken'
  *                              tokenNotFound:
  *                                  $ref: '#/components/examples/TokenNotFound'
+ *                              tokenReuseDetected:
+ *                                  $ref: '#/components/examples/TokenReuseDetected'
  *              500:
  *                  $ref: '#/components/responses/InternalError'
  */

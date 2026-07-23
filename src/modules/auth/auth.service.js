@@ -153,6 +153,17 @@ const logoutAll = async (refreshToken) => {
         throw unauthorized({ message: "Invalid refresh token", code: "INVALID_TOKEN" });
     }
 
+    if (tokenData.revoked_at) {
+        logger.error({
+            userId: tokenData.user_id,
+            jti: tokenData.jti,
+            tokenId: tokenData.id,
+        }, "Refresh token reuse detected: logout called on already revoked token");
+
+        throw unauthorized({message: "Refresh token reuse detected", code: "TOKEN_REUSE_DETECTED"});
+    }
+    
+
     return tokenService.revokeAllRefreshTokensByUserId(tokenData.user_id);
 };
 
