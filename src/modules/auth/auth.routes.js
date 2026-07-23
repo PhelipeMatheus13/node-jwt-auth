@@ -29,7 +29,16 @@ const { validateLogin } = require("./auth.validators");
  *                                  data: 
  *                                      $ref: '#/components/schemas/AuthTokens'
  *              401: 
- *                  $ref: '#/components/responses/Unauthorized'
+ *                  description: Authentication failed
+ *                  content:
+ *                      application/json:
+ *                          schema:
+ *                              $ref: '#/components/schemas/Error'
+ *                          example:
+ *                              success: false
+ *                              error:
+ *                                  code: "INVALID_CREDENTIALS"
+ *                                  message: "Invalid email or password"
  *              422:    
  *                   $ref: '#/components/responses/LoginValidationError'
  *              500: 
@@ -69,7 +78,20 @@ router.post("/login", validateLogin, authController.login);
  *              400:
  *                  $ref: '#/components/responses/BadRequest'
  *              401:
- *                  $ref: '#/components/responses/Unauthorized'
+ *                  description: Authentication failed
+ *                  content:
+ *                      application/json:
+ *                          schema:
+ *                              $ref: '#/components/schemas/Error'
+ *                          examples:
+ *                              tokenExpired:
+ *                                  $ref: '#/components/examples/TokenExpired'
+ *                              invalidToken:
+ *                                  $ref: '#/components/examples/InvalidToken'
+ *                              tokenNotFound:
+ *                                  $ref: '#/components/examples/TokenNotFound'
+ *                              tokenReuseDetected:
+ *                                  $ref: '#/components/examples/TokenReuseDetected'
  *              500:
  *                  $ref: '#/components/responses/InternalError'
  */
@@ -97,10 +119,22 @@ router.post("/refresh", authController.refresh);
  *              400:
  *                  $ref: '#/components/responses/BadRequest'
  *              401:
- *                  $ref: '#/components/responses/Unauthorized'
+ *                  description: Authentication failed
+ *                  content:
+ *                      application/json:
+ *                          schema:
+ *                              $ref: '#/components/schemas/Error'
+ *                          examples:
+ *                              tokenExpired:
+ *                                  $ref: '#/components/examples/TokenExpired'
+ *                              invalidToken:
+ *                                  $ref: '#/components/examples/InvalidToken'
+ *                              tokenNotFound:
+ *                                  $ref: '#/components/examples/TokenNotFound'
  *              500:
  *                  $ref: '#/components/responses/InternalError'
  */
+router.post("/logout", authController.logout);
 router.post("/logout", authController.logout);
 
 /**
@@ -125,10 +159,22 @@ router.post("/logout", authController.logout);
  *              400:
  *                  $ref: '#/components/responses/BadRequest'
  *              401:
- *                  $ref: '#/components/responses/Unauthorized'
+ *                  description: Authentication failed
+ *                  content:
+ *                      application/json:
+ *                          schema:
+ *                              $ref: '#/components/schemas/Error'
+ *                          examples:
+ *                              tokenExpired:
+ *                                  $ref: '#/components/examples/TokenExpired'
+ *                              invalidToken:
+ *                                  $ref: '#/components/examples/InvalidToken'
+ *                              tokenNotFound:
+ *                                  $ref: '#/components/examples/TokenNotFound'
  *              500:
  *                  $ref: '#/components/responses/InternalError'
  */
+router.post("/logout-all", authController.logoutAll);
 router.post("/logout-all", authController.logoutAll);
 
 module.exports = router;
