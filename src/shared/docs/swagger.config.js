@@ -42,7 +42,7 @@ const options = {
   	},
   	apis: [
 		"./src/modules/**/*.routes.js",
-		"./src/shared/docs/components/*.docs.js",
+    	"./src/shared/docs/components/*.yaml",
 	], 
 };
 

@@ -1,0 +1,100 @@
+components:
+    responses:
+        InternalError:
+            description: Internal error
+            content:
+                application/json:
+                    schema:
+                        allOf:
+                            - $ref: '#/components/schemas/Error'
+                            - type: object
+                              properties:
+                                  error:
+                                      properties:
+                                          code:
+                                              example: "INTERNAL_ERROR"
+                                          message:
+                                              example: "Internal server error"
+        LoginValidationError:
+            description: Login validation error
+            content:
+                application/json:
+                    schema:
+                        $ref: '#/components/schemas/ValidationError'
+                    example:
+                        success: false
+                        error:
+                            code: "VALIDATION_ERROR"
+                            message: "Validation failed"
+                            details: [
+                                {"field":"email","message":"Please provide a valid email address"},
+                                {"field":"password","message":"Password is required"}
+                            ]
+        RegisterValidationError:
+            description: Register validation error
+            content:
+                application/json:
+                    schema:
+                        $ref: '#/components/schemas/ValidationError'
+                    example:
+                        success: false
+                        error:
+                            code: "VALIDATION_ERROR"
+                            message: "Validation failed"
+                            details: [
+                                {"field":"name","message":"Name is required"},
+                                {"field":"email","message":"Please provide a valid email address"},
+                                {"field":"password","message":"Password must contain at least one special character"},
+                                {"field":"confirmPassword","message":"Passwords do not match"}
+                            ]
+        MissingUserIdError:
+            description: Invalid request, missing user id
+            content:
+                application/json:
+                    schema:
+                        $ref: '#/components/schemas/Error'
+                    example:
+                        success: false
+                        error:
+                            code: "BAD_REQUEST"
+                            message: "User ID is required"
+        MissingRefreshTokenError:
+            description: Invalid request, missing refresh token
+            content:
+                application/json:
+                    schema:
+                        $ref: '#/components/schemas/Error'
+                    example:
+                        success: false
+                        error:
+                            code: "BAD_REQUEST"
+                            message: "Refresh token is required"
+        UserNotFoundError:
+            description: User not found or does not exist
+            content:
+                application/json:
+                    schema:
+                        $ref: '#/components/schemas/Error'
+                    example:
+                        success: false
+                        error:
+                            code: "NOT_FOUND"
+                            message: "User not found"
+        UserAuthenticationError:
+            description: Authentication failed
+            content:
+                application/json:
+                    schema:
+                        $ref: '#/components/schemas/Error'
+                    examples:
+                        accessDenied:
+                            summary: Missing authentication token
+                            value:
+                                success: false
+                                error:
+                                    code: "UNAUTHORIZED"
+                                    message: "Access denied"
+                        AccessTokenExpired:
+                            $ref: '#/components/examples/AccessTokenExpired'
+                        InvalidAccessToken:
+                            $ref: '#/components/examples/InvalidAccessToken'
