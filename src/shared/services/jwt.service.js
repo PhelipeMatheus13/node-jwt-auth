@@ -18,7 +18,7 @@ const decodeAccessToken = (token) => {
         return jwt.verify(token, secret);
     } catch (error) {
         if (error.name === 'TokenExpiredError') {
-            throw unauthorized({ message: "Access token expired", code: "TOKEN_EXPIRED" });
+            throw unauthorized({ message: "Access token expired", code: "ACCESS_TOKEN_EXPIRED" });
         }
 
         if (error.name === 'JsonWebTokenError' || error.name === 'NotBeforeError') {
@@ -37,7 +37,7 @@ const decodeRefreshToken = (token) => {
         return jwt.verify(token, secret);
     } catch (error) {
         if (error.name === 'TokenExpiredError') {
-            throw unauthorized({ message: "Refresh token expired", code: "TOKEN_EXPIRED" });
+            throw unauthorized({ message: "Refresh token expired", code: "REFRESH_TOKEN_EXPIRED" });
         }
 
         if (error.name === 'JsonWebTokenError' || error.name === 'NotBeforeError') {

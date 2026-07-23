@@ -55,7 +55,7 @@ describe("JWT Service (Unit)", () => {
             expect(jwt.verify).toHaveBeenCalledWith("valid-token", "secret");
         });
 
-        it("should throw TOKEN_EXPIRED error when token is expired", () => {
+        it("should throw ACCESS_TOKEN_EXPIRED error when token is expired", () => {
             const expiredError = new Error("jwt expired");
             expiredError.name = "TokenExpiredError";
             jwt.verify.mockImplementation(() => { throw expiredError; });
@@ -64,7 +64,7 @@ describe("JWT Service (Unit)", () => {
                 .toThrow(
                     expect.objectContaining({
                         statusCode: 401,
-                        code: "TOKEN_EXPIRED",
+                        code: "ACCESS_TOKEN_EXPIRED",
                         message: "Access token expired",
                     })
                 );
@@ -115,7 +115,7 @@ describe("JWT Service (Unit)", () => {
             expect(jwt.verify).toHaveBeenCalledWith("valid-token", "refresh");
         });
 
-        it("should throw TOKEN_EXPIRED error when token is expired", () => {
+        it("should throw REFRESH_TOKEN_EXPIRED error when token is expired", () => {
             const expiredError = new Error("jwt expired");
             expiredError.name = "TokenExpiredError";
             jwt.verify.mockImplementation(() => { throw expiredError; });
@@ -124,7 +124,7 @@ describe("JWT Service (Unit)", () => {
                 .toThrow(
                     expect.objectContaining({
                         statusCode: 401,
-                        code: "TOKEN_EXPIRED",
+                        code: "REFRESH_TOKEN_EXPIRED",
                         message: "Refresh token expired",
                     })
                 );
