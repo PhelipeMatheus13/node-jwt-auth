@@ -112,7 +112,18 @@ router.get("/:id", checkToken, authorize("admin", "user"), userController.getUse
  *                    type: string
  *          responses:
  *              200:
- *                  description: User deleted successfully, no content returned
+ *                  description: User deleted successfully
+ *                  content:
+ *                      application/json:
+ *                          schema:
+ *                              type: object
+ *                              properties:
+ *                                  success:
+ *                                      type: boolean
+ *                                      example: true
+ *                                  message:
+ *                                      type: string
+ *                                      example: "User deleted successfully"
  *              400: 
  *                  $ref: '#/components/responses/MissingUserIdError'
  *              401:
