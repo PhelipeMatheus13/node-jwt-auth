@@ -1,8 +1,18 @@
 {
   "name": "jwt-auth",
+  "description": "REST API for JWT authentication and user management",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "author": "Phelipe Matheus",
+  "license": "ISC",
+  "private": true,
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PhelipeMatheus13/node-jwt-auth"
+  },
+  "homepage": "https://github.com/PhelipeMatheus13/node-jwt-auth#readme",
   "scripts": {
     "start": "cross-env NODE_ENV=development nodemon src/server.js",
     "test": "cross-env NODE_ENV=test jest --coverage --watchAll --detectOpenHandles",
@@ -10,9 +20,16 @@
     "test:unit": "cross-env NODE_ENV=test jest --testPathPatterns=tests/unit --forceExit --detectOpenHandles",
     "test:integration": "cross-env NODE_ENV=test jest --testPathPatterns=tests/integration --forceExit --detectOpenHandles"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "jwt",
+    "authentication",
+    "express",
+    "nodejs",
+    "api",
+    "postgresql",
+    "swagger",
+    "openapi"
+  ],
   "type": "commonjs",
   "dependencies": {
     "bcrypt": "^6.0.0",
