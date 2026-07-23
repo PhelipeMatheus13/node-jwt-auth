@@ -33,7 +33,7 @@ const deleteUser = asyncHandler(async (req, res) => {
     if (!id) throw badRequest({ message: "User ID is required" });
 
     if (req.user.role !== 'admin' && req.user.id !== id) {
-        throw forbidden({ message: "You can only access your own data" });
+        throw forbidden({ message: "You can only delete your own account" });
     }
 
     await userService.deleteUserById(id);
