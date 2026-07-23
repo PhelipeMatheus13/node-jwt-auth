@@ -123,7 +123,7 @@ describe("User Routes (Integration)", () => {
 
             expect(res.statusCode).toBe(200);
             expect(res.body.success).toBe(true);
-            expect(res.body.message).toBe('User deleted successfully');
+            expect(res.body.message).toBe("User deleted successfully");
         });
 
         it("should return 401 when no token is provided", async () => {

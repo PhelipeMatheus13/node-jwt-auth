@@ -1,4 +1,4 @@
-const tokenRepository = require('./token.repository');
+const tokenRepository = require("./token.repository");
 
 const deleteExpiredRefreshTokens = () => tokenRepository.deleteExpired();
 

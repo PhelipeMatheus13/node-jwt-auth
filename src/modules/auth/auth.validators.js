@@ -22,7 +22,7 @@ const validateLogin = [
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return next(unprocessable({
-                message: 'Validation failed',
+                message: "Validation failed",
                 details: errors.array().map(error => ({
                     field: error.path, 
                     message: error.msg,
