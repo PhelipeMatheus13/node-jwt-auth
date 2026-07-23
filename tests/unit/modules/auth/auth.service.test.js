@@ -442,7 +442,7 @@ describe("Auth Service (Unit)", () => {
                 });
         });
 
-        it("should return if token is already revoked", async () => {
+        it("should throw error if token is already revoked", async () => {
             jwtService.decodeRefreshToken.mockReturnValue(decodedToken);
             tokenService.findRefreshTokenByJti.mockResolvedValue({
                 token_hash: "hashed-refresh-token",
@@ -546,6 +546,24 @@ describe("Auth Service (Unit)", () => {
                     statusCode: 401,
                     code: "INVALID_TOKEN",
                     message: "Invalid refresh token",
+                });
+        });
+
+        it("should throw error if token is already revoked", async () => {
+            jwtService.decodeRefreshToken.mockReturnValue(decodedToken);
+            tokenService.findRefreshTokenByJti.mockResolvedValue({
+                token_hash: "hashed-refresh-token",
+                user_id: "uuid-123",
+                jti: "jti-uuid-123",
+                revoked_at: new Date() // Simulate that the token has been revoked
+            });
+            tokenHashService.compareToken.mockResolvedValueOnce(true);
+            
+            await expect(authService.logoutAll(refreshToken))
+                .rejects.toMatchObject({
+                    statusCode: 401,
+                    code: "TOKEN_REUSE_DETECTED",
+                    message: "Refresh token reuse detected",
                 });
         });
 

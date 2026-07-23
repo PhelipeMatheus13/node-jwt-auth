@@ -17,11 +17,11 @@ const decodeAccessToken = (token) => {
     try {
         return jwt.verify(token, secret);
     } catch (error) {
-        if (error.name === 'TokenExpiredError') {
-            throw unauthorized({ message: "Access token expired", code: "TOKEN_EXPIRED" });
+        if (error.name === "TokenExpiredError") {
+            throw unauthorized({ message: "Access token expired", code: "ACCESS_TOKEN_EXPIRED" });
         }
 
-        if (error.name === 'JsonWebTokenError' || error.name === 'NotBeforeError') {
+        if (error.name === "JsonWebTokenError" || error.name === "NotBeforeError") {
             logger.warn({ err: error }, "Invalid access token");
             throw unauthorized({ message: "Invalid access token", code: "INVALID_TOKEN" });
         }
@@ -36,11 +36,11 @@ const decodeRefreshToken = (token) => {
     try {
         return jwt.verify(token, secret);
     } catch (error) {
-        if (error.name === 'TokenExpiredError') {
-            throw unauthorized({ message: "Refresh token expired", code: "TOKEN_EXPIRED" });
+        if (error.name === "TokenExpiredError") {
+            throw unauthorized({ message: "Refresh token expired", code: "REFRESH_TOKEN_EXPIRED" });
         }
 
-        if (error.name === 'JsonWebTokenError' || error.name === 'NotBeforeError') {
+        if (error.name === "JsonWebTokenError" || error.name === "NotBeforeError") {
             logger.warn({ err: error }, "Invalid refresh token");
             throw unauthorized({ message: "Invalid refresh token", code: "INVALID_TOKEN" });
         }

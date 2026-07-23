@@ -1,10 +1,10 @@
 // create a custom error class that extends the built-in Error class, 
 // allowing us to add additional properties and methods specific to our application's needs
 class AppError extends Error {
-    constructor({ statusCode = 500, code = 'INTERNAL_ERROR', message = 'Internal server error', details = null } = {}) {
+    constructor({ statusCode = 500, code = "INTERNAL_ERROR", message = "Internal server error", details = null } = {}) {
         // super(message) initializes the parent class (Error), generating the "real" JS error with message and stack trace
         super(message); 
-        this.name = 'AppError';
+        this.name = "AppError";
         this.statusCode = statusCode;
         this.code = code;
         this.details = details;
@@ -31,57 +31,57 @@ class AppError extends Error {
 // easy to extend and maintain, ensuring consistency across the application when throwing errors
 const badRequest = (options = {}) => new AppError({
     statusCode: 400,
-    code: 'BAD_REQUEST',
-    message: 'Bad request',
+    code: "BAD_REQUEST",
+    message: "Bad request",
     ...options,
 });
 
 const unauthorized = (options = {}) => new AppError({
     statusCode: 401,
-    code: 'UNAUTHORIZED',
-    message: 'Authentication required',
+    code: "UNAUTHORIZED",
+    message: "Authentication required",
     ...options,
 });
 
 const forbidden = (options = {}) => new AppError({
     statusCode: 403,
-    code: 'FORBIDDEN',
-    message: 'Access denied',
+    code: "FORBIDDEN",
+    message: "Access denied",
     ...options,
 });
 
 const notFound = (options = {}) => new AppError({
     statusCode: 404,
-    code: 'NOT_FOUND',
-    message: 'Resource not found', 
+    code: "NOT_FOUND",
+    message: "Resource not found", 
     ...options,
 });
 
 const conflict = (options = {}) => new AppError({
     statusCode: 409,
-    code: 'CONFLICT',
-    message: 'Resource conflict',
+    code: "CONFLICT",
+    message: "Resource conflict",
     ...options,
 });
 
 const alreadyExists = (options = {}) => new AppError({
     statusCode: 409,
-    code: 'ALREADY_EXISTS',
-    message: 'Resource already exists',
+    code: "ALREADY_EXISTS",
+    message: "Resource already exists",
     ...options,
 });
 
 const unprocessable = (options = {}) => new AppError({
   statusCode: 422,
-  code: 'VALIDATION_ERROR',
-  message: 'Validation failed',
+  code: "VALIDATION_ERROR",
+  message: "Validation failed",
   ...options,
 });
 
 const internal = (options = {}) => new AppError({
     statusCode: 500,
-    code: 'INTERNAL_ERROR',
-    message: 'Internal server error',
+    code: "INTERNAL_ERROR",
+    message: "Internal server error",
     ...options,
 });
 

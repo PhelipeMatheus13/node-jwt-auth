@@ -159,7 +159,7 @@ describe("User Controller (Unit)", () => {
             expect(next).toHaveBeenCalledWith(expect.objectContaining({
                 statusCode: 403,
                 code: "FORBIDDEN",
-                message: "You can only access your own data",
+                message: "You can only delete your own account",
             }));
             expect(res.status).not.toHaveBeenCalled();
         });

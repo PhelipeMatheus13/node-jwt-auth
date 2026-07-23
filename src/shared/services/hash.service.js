@@ -8,7 +8,7 @@ const hashPassword = async (password) => {
         return await bcrypt.hash(password, salt);
     } catch (error) {
         logger.error({ err: error }, "Bcrypt password hashing error");
-        throw internal({ message: "Failed to process password hash" });
+        throw internal();
     }
 };
 
@@ -17,7 +17,7 @@ const comparePassword = async (password, hash) => {
         return await bcrypt.compare(password, hash);
     } catch (error) {
         logger.error({ err: error }, "Bcrypt password compare error");
-        throw internal({ message: "Failed to compare password hash" });
+        throw internal();
     }
 };
 

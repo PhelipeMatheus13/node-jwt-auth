@@ -25,7 +25,7 @@ const compareToken = (token, hash) => {
         );
     } catch (error) {
         logger.error({ err: error }, "Token comparison error");
-        throw internal({ message: "Failed to compare token" });
+        throw internal();
     }
 };
 

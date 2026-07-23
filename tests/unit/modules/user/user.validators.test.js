@@ -42,7 +42,7 @@ describe("User Validators (Unit)", () => {
                     statusCode: 422,
                     code: "VALIDATION_ERROR",
                     details: expect.arrayContaining([
-                        expect.objectContaining({ msg: "Name is required" })
+                        expect.objectContaining({ message: "Name is required" })
                     ])
                 })
             );
@@ -61,7 +61,7 @@ describe("User Validators (Unit)", () => {
                     statusCode: 422,
                     code: "VALIDATION_ERROR",
                     details: expect.arrayContaining([
-                        expect.objectContaining({ msg: "Name must be at least 3 characters long" })
+                        expect.objectContaining({ message: "Name must be at least 3 characters long" })
                     ])
                 })
             );
@@ -80,7 +80,7 @@ describe("User Validators (Unit)", () => {
                     statusCode: 422,
                     code: "VALIDATION_ERROR",
                     details: expect.arrayContaining([
-                        expect.objectContaining({ msg: "Please provide a valid email address" })
+                        expect.objectContaining({ message: "Please provide a valid email address" })
                     ])
                 })
             );
@@ -99,7 +99,7 @@ describe("User Validators (Unit)", () => {
                     statusCode: 422,
                     code: "VALIDATION_ERROR",
                     details: expect.arrayContaining([
-                        expect.objectContaining({ msg: "Password is required" })
+                        expect.objectContaining({ message: "Password is required" })
                     ])
                 })
             );
@@ -118,7 +118,7 @@ describe("User Validators (Unit)", () => {
                     statusCode: 422,
                     code: "VALIDATION_ERROR",
                     details: expect.arrayContaining([
-                        expect.objectContaining({ msg: "Password must be at least 6 characters long" })
+                        expect.objectContaining({ message: "Password must be at least 6 characters long" })
                     ])
                 })
             );
@@ -137,7 +137,7 @@ describe("User Validators (Unit)", () => {
                     statusCode: 422,
                     code: "VALIDATION_ERROR",
                     details: expect.arrayContaining([
-                        expect.objectContaining({ msg: "Password must contain at least one special character" })
+                        expect.objectContaining({ message: "Password must contain at least one special character" })
                     ])
                 })
             );
@@ -156,7 +156,7 @@ describe("User Validators (Unit)", () => {
                     statusCode: 422,
                     code: "VALIDATION_ERROR",
                     details: expect.arrayContaining([
-                        expect.objectContaining({ msg: "Password confirmation is required" })
+                        expect.objectContaining({ message: "Password confirmation is required" })
                     ])
                 })
             );
@@ -175,7 +175,7 @@ describe("User Validators (Unit)", () => {
                     statusCode: 422,
                     code: "VALIDATION_ERROR",
                     details: expect.arrayContaining([
-                        expect.objectContaining({ msg: "Passwords do not match" })
+                        expect.objectContaining({ message: "Passwords do not match" })
                     ])
                 })
             );

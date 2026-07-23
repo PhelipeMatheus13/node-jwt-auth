@@ -29,6 +29,7 @@ describe("Auth Validators (Unit)", () => {
 
         it("should return 422 if email is missing", async () => {
             await runValidation({
+                email: "   ",
                 password: "anypassword"
             });
 
@@ -37,7 +38,7 @@ describe("Auth Validators (Unit)", () => {
                     statusCode: 422,
                     code: "VALIDATION_ERROR",
                     details: expect.arrayContaining([
-                        expect.objectContaining({ msg: "Email is required" })
+                        expect.objectContaining({ message: "Email is required" })
                     ])
                 })
             );
@@ -49,12 +50,12 @@ describe("Auth Validators (Unit)", () => {
                 password: "anypassword"
             });
 
-            expect(next).toHaveBeenCalledWith(
+            expect(next).toHaveBeenLastCalledWith(
                 expect.objectContaining({
                     statusCode: 422,
                     code: "VALIDATION_ERROR",
                     details: expect.arrayContaining([
-                        expect.objectContaining({ msg: "Please provide a valid email address" })
+                        expect.objectContaining({ message: "Please provide a valid email address" })
                     ])
                 })
             );
@@ -70,7 +71,7 @@ describe("Auth Validators (Unit)", () => {
                     statusCode: 422,
                     code: "VALIDATION_ERROR",
                     details: expect.arrayContaining([
-                        expect.objectContaining({ msg: "Password is required" })
+                        expect.objectContaining({ message: "Password is required" })
                     ])
                 })
             );

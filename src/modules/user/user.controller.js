@@ -8,7 +8,7 @@ const register = asyncHandler(async (req, res) => {
     await userService.createUser(input);
     res.status(201).json({
         success: true,
-        message: 'User created successfully'
+        message: "User created successfully"
     });
 });
 
@@ -17,7 +17,7 @@ const getUser = asyncHandler(async (req, res) =>  {
     if (!id) throw badRequest({ message: "User ID is required" });
 
     // Only allow access if the user is an admin or the owner of the data
-    if (req.user.role !== 'admin' && req.user.id !== id) {
+    if (req.user.role !== "admin" && req.user.id !== id) {
         throw forbidden({ message: "You can only access your own data" });
     }
 
@@ -32,14 +32,14 @@ const deleteUser = asyncHandler(async (req, res) => {
     const id = req.params.id;
     if (!id) throw badRequest({ message: "User ID is required" });
 
-    if (req.user.role !== 'admin' && req.user.id !== id) {
-        throw forbidden({ message: "You can only access your own data" });
+    if (req.user.role !== "admin" && req.user.id !== id) {
+        throw forbidden({ message: "You can only delete your own account" });
     }
 
     await userService.deleteUserById(id);
     res.status(200).json({
         success: true,
-        message: 'User deleted successfully'
+        message: "User deleted successfully"
     });
 });
 
