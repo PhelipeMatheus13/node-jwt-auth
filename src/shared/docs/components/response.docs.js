@@ -62,21 +62,6 @@
  *                                                  example: "NOT_FOUND"
  *                                              message:
  *                                                  example: "Resource not found"
- *          Conflict:
- *              description: Resource conflict
- *              content:
- *                  application/json:
- *                      schema:
- *                          allOf:
- *                              - $ref: '#/components/schemas/Error'
- *                              - type: object
- *                                properties:
- *                                      error: 
- *                                          properties:
- *                                              code:
- *                                                  example: "CONFLICT"
- *                                              message:
- *                                                  example: "Resource conflict"
  *          AlreadyExists:
  *              description: Resource already exists
  *              content:
@@ -92,26 +77,6 @@
  *                                                  example: "ALREADY_EXISTS"
  *                                              message:
  *                                                  example: "Resource already exists"
- *          Unprocessable:
- *              description: validation error
- *              content:
- *                  application/json:
- *                      schema:
- *                          allOf:
- *                              - $ref: '#/components/schemas/Error'
- *                              - type: object
- *                                properties:
- *                                      error: 
- *                                          properties:
- *                                              code:
- *                                                  example: "VALIDATION_ERROR"
- *                                              message:
- *                                                  example: "Validation failed"
- *                                              details:
- *                                                  type: array 
- *                                                  items:
- *                                                      type: object
- *                                                  example: [{"type":"field","value":"","msg":"Name is required","path":"name","location":"body"}]                         
  *          InternalError:
  *              description: Internal error
  *              content:
@@ -127,4 +92,36 @@
  *                                                  example: "INTERNAL_ERROR"
  *                                              message:
  *                                                  example: "Internal server error"
+ *          LoginValidationError:
+ *              description: Login validation error
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          $ref: '#/components/schemas/ValidationError'
+ *                      example:
+ *                          success: false
+ *                          error:
+ *                              code: "VALIDATION_ERROR"
+ *                              message: "Validation failed"
+ *                              details: [
+ *                                  {"field":"email","message":"Please provide a valid email address"},
+ *                                  {"field":"password","message":"Password is required"}
+ *                              ]
+ *          RegisterValidationError:
+ *              description: Register validation error
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          $ref: '#/components/schemas/ValidationError'
+ *                      example:
+ *                          success: false
+ *                          error:
+ *                              code: "VALIDATION_ERROR"
+ *                              message: "Validation failed"
+ *                              details: [
+ *                                  {"field":"name","message":"Name is required"},
+ *                                  {"field":"email","message":"Please provide a valid email address"},
+ *                                  {"field":"password","message":"Password must contain at least one special character"},
+ *                                  {"field":"confirmPassword","message":"Passwords do not match"}
+ *                              ]
  */

@@ -8,7 +8,7 @@ const { validateLogin } = require("./auth.validators");
  *  /auth/login:
  *      post:  
  *          tags: [Auth]
- *          summary: Authenticates the user and returns access tokens
+ *          summary: Authenticates the user and returns a access token and an refresh token
  *          requestBody:
  *              required: true
  *              content:
@@ -31,7 +31,7 @@ const { validateLogin } = require("./auth.validators");
  *              401: 
  *                  $ref: '#/components/responses/Unauthorized'
  *              422:    
- *                  $ref: '#/components/responses/Unprocessable'
+ *                   $ref: '#/components/responses/LoginValidationError'
  *              500: 
  *                  $ref: '#/components/responses/InternalError'
  */

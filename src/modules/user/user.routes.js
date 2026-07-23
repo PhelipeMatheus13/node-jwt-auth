@@ -31,8 +31,8 @@ const { validateRegister } = require("./user.validators");
  *                                      $ref: '#/components/schemas/User'
  *              409:
  *                  $ref: '#/components/responses/AlreadyExists'
- *              422:
- *                  $ref: '#/components/responses/Unprocessable'
+ *              422:    
+ *                   $ref: '#/components/responses/RegisterValidationError'
  *              500:
  *                  $ref: '#/components/responses/InternalError'
  */
