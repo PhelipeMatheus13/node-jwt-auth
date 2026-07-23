@@ -20,6 +20,7 @@ A simple and secure authentication API built with Node.js, Express, and PostgreS
 - Scheduled job for cleaning expired and revoked tokens (background worker)
 - Structured logging with Pino and request context propagation (AsyncLocalStorage)
 - Automatic redaction of sensitive data in logs
+- OpenAPI/Swagger documentation with interactive UI
 - Unit and integration tests with Jest, Supertest, and testcontainers
 - Dockerized development environment
 
@@ -32,6 +33,7 @@ A simple and secure authentication API built with Node.js, Express, and PostgreS
 - JSON Web Tokens (jsonwebtoken)
 - bcrypt
 - express-validator
+- swagger-jsdoc / swagger-ui-express
 - Jest
 - Supertest
 - testcontainers
@@ -56,6 +58,15 @@ Stop the database when done
 ```bash
 docker compose down
 ```
+
+## API Documentation
+
+Once the application is running, the interactive Swagger UI is available at:
+
+http://localhost:3000/api-docs
+
+
+It documents every endpoint's request/response schemas, authentication requirements, and example payloads for each possible error scenario (validation errors, authentication failures, etc.).
 
 ## Installation
 
