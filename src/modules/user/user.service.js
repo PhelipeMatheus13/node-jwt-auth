@@ -1,6 +1,6 @@
 const userRepository = require("./user.repository");
 const hashService = require("../../shared/services/hash.service");
-const {alreadyExists, internal, notFound} = require("../../shared/errors/errors");
+const {alreadyExists, notFound} = require("../../shared/errors/errors");
 
 const createUser = async (data) => {
     const exists = await userRepository.existsByEmail(data.email);

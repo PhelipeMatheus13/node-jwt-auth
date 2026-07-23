@@ -26,7 +26,7 @@ describe("Hash Service (Unit)", () => {
             await expect(hashService.hashPassword("plain")).rejects.toMatchObject({
                 statusCode: 500,
                 code: "INTERNAL_ERROR",
-                message: "Failed to process password hash",
+                message: "Internal server error",
             });
         });
     });
@@ -56,7 +56,7 @@ describe("Hash Service (Unit)", () => {
             await expect(hashService.comparePassword("password", "hash")).rejects.toMatchObject({
                 statusCode: 500,
                 code: "INTERNAL_ERROR",
-                message: "Failed to compare password hash",
+                message: "Internal server error",
             });
         });
     });

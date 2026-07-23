@@ -82,7 +82,7 @@ describe("Token hash service (Unit)", () => {
                 expect.objectContaining({
                     statusCode: 500,
                     code: "INTERNAL_ERROR",
-                    message: "Failed to compare token",
+                    message: "Internal server error",
                 })
             );
         });
