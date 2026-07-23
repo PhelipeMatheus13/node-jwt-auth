@@ -30,7 +30,16 @@ const { validateRegister } = require("./user.validators");
  *                                  data:
  *                                      $ref: '#/components/schemas/User'
  *              409:
- *                  $ref: '#/components/responses/AlreadyExists'
+ *                  description: email already in use
+ *                  content:
+ *                      application/json:
+ *                          schema:
+ *                              $ref: '#/components/schemas/Error'
+ *                          example:
+ *                              success: false
+ *                              error:
+ *                                  code: "ALREADY_EXISTS"
+ *                                  message: "Email already in use, please choose another"
  *              422:    
  *                   $ref: '#/components/responses/RegisterValidationError'
  *              500:
@@ -65,12 +74,23 @@ router.post("/register", validateRegister, userController.register);
  *                                      example: true
  *                                  data:
  *                                      $ref: '#/components/schemas/User'
- *              401:
- *                  $ref: '#/components/responses/Unauthorized'
+ *              400: 
+ *                  $ref: '#/components/responses/MissingUserIdError'
+ *              401:    
+ *                  $ref: '#/components/responses/UserAuthenticationError'
  *              403:
- *                  $ref: '#/components/responses/Forbidden'
+ *                  description: Access denied
+ *                  content:
+ *                      application/json:
+ *                          schema:
+ *                              $ref: '#/components/schemas/Error'
+ *                          example:
+ *                              success: false
+ *                              error:
+ *                                  code: "FORBIDDEN"
+ *                                  message: "You can only access your own data"
  *              404:
- *                  $ref: '#/components/responses/NotFound'
+ *                  $ref: '#/components/responses/UserNotFoundError'
  *              500:
  *                  $ref: '#/components/responses/InternalError'
  */
@@ -93,12 +113,23 @@ router.get("/:id", checkToken, authorize("admin", "user"), userController.getUse
  *          responses:
  *              200:
  *                  description: User deleted successfully, no content returned
+ *              400: 
+ *                  $ref: '#/components/responses/MissingUserIdError'
  *              401:
- *                  $ref: '#/components/responses/Unauthorized'
+ *                  $ref: '#/components/responses/UserAuthenticationError'
  *              403:
- *                  $ref: '#/components/responses/Forbidden'
+ *                  description: Access denied
+ *                  content:
+ *                      application/json:
+ *                          schema:
+ *                              $ref: '#/components/schemas/Error'
+ *                          example:
+ *                              success: false
+ *                              error:
+ *                                  code: "FORBIDDEN"
+ *                                  message: "You can only delete your own account"
  *              404:
- *                  $ref: '#/components/responses/NotFound'
+ *                  $ref: '#/components/responses/UserNotFoundError'
  *              500:
  *                  $ref: '#/components/responses/InternalError'
  */

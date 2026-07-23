@@ -9,20 +9,34 @@
  *                  error:
  *                      code: "INVALID_CREDENTIALS"
  *                      message: "Invalid email or password"
- *          TokenExpired:
- *              summary: Access or refresh token expired
+ *          AccessTokenExpired:
+ *              summary: Access token expired
  *              value:
  *                  success: false
  *                  error:
- *                      code: "TOKEN_EXPIRED"
+ *                      code: "ACCESS_TOKEN_EXPIRED"
+ *                      message: "Access token expired"
+ *          RefreshTokenExpired:
+ *              summary: Refresh token expired
+ *              value:
+ *                  success: false
+ *                  error:
+ *                      code: "REFRESH_TOKEN_EXPIRED"
  *                      message: "Refresh token expired"
- *          InvalidToken:
- *              summary: Malformed or tampered token
+ *          InvalidRefreshToken:
+ *              summary: Malformed or tampered refresh token
  *              value:
  *                  success: false
  *                  error:
  *                      code: "INVALID_TOKEN"
  *                      message: "Invalid refresh token"
+ *          InvalidAccessToken:
+ *              summary: Malformed or tampered access token
+ *              value:
+ *                  success: false
+ *                  error:
+ *                      code: "INVALID_TOKEN"
+ *                      message: "Invalid access token"
  *          TokenNotFound:
  *              summary: Token not found in database
  *              value:

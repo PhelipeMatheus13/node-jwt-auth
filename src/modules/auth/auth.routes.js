@@ -76,7 +76,7 @@ router.post("/login", validateLogin, authController.login);
  *                                  data:
  *                                      $ref: '#/components/schemas/AuthTokens'
  *              400:
- *                  $ref: '#/components/responses/BadRequest'
+ *                  $ref: '#/components/responses/MissingRefreshTokenError'
  *              401:
  *                  description: Authentication failed
  *                  content:
@@ -84,10 +84,10 @@ router.post("/login", validateLogin, authController.login);
  *                          schema:
  *                              $ref: '#/components/schemas/Error'
  *                          examples:
- *                              tokenExpired:
- *                                  $ref: '#/components/examples/TokenExpired'
- *                              invalidToken:
- *                                  $ref: '#/components/examples/InvalidToken'
+ *                              RefreshTokenExpired:
+ *                                  $ref: '#/components/examples/RefreshTokenExpired'
+ *                              InvalidRefreshToken:
+ *                                  $ref: '#/components/examples/InvalidRefreshToken'
  *                              tokenNotFound:
  *                                  $ref: '#/components/examples/TokenNotFound'
  *                              tokenReuseDetected:
@@ -115,9 +115,20 @@ router.post("/refresh", authController.refresh);
  *                                  type: string
  *          responses:
  *              200:
- *                  description: Logout successful, no content returned
- *              400:
- *                  $ref: '#/components/responses/BadRequest'
+ *                  description: Logout successful, session revoked
+ *                  content:
+ *                      application/json:
+ *                          schema:
+ *                              type: object
+ *                              properties:
+ *                                  success:
+ *                                      type: boolean
+ *                                      example: true
+ *                                  message: 
+ *                                      type: string
+ *                                      example: "Logged out successfully"
+ *              400: 
+ *                  $ref: '#/components/responses/MissingRefreshTokenError'
  *              401:
  *                  description: Authentication failed
  *                  content:
@@ -125,16 +136,15 @@ router.post("/refresh", authController.refresh);
  *                          schema:
  *                              $ref: '#/components/schemas/Error'
  *                          examples:
- *                              tokenExpired:
- *                                  $ref: '#/components/examples/TokenExpired'
- *                              invalidToken:
- *                                  $ref: '#/components/examples/InvalidToken'
+ *                              RefreshTokenExpired:
+ *                                  $ref: '#/components/examples/RefreshTokenExpired'
+ *                              InvalidRefreshToken:
+ *                                  $ref: '#/components/examples/InvalidRefreshToken'
  *                              tokenNotFound:
  *                                  $ref: '#/components/examples/TokenNotFound'
  *              500:
  *                  $ref: '#/components/responses/InternalError'
  */
-router.post("/logout", authController.logout);
 router.post("/logout", authController.logout);
 
 /**
@@ -155,9 +165,20 @@ router.post("/logout", authController.logout);
  *                                  type: string
  *          responses:
  *              200:
- *                  description: All sessions invalidated, no content returned
- *              400:
- *                  $ref: '#/components/responses/BadRequest'
+ *                  description: Logout-all successful, all sessions revoked
+ *                  content:
+ *                      application/json:
+ *                          schema:
+ *                              type: object
+ *                              properties:
+ *                                  success:
+ *                                      type: boolean
+ *                                      example: true
+ *                                  message: 
+ *                                      type: string
+ *                                      example: "Logged out from all devices"
+ *              400: 
+ *                  $ref: '#/components/responses/MissingRefreshTokenError'
  *              401:
  *                  description: Authentication failed
  *                  content:
@@ -165,16 +186,15 @@ router.post("/logout", authController.logout);
  *                          schema:
  *                              $ref: '#/components/schemas/Error'
  *                          examples:
- *                              tokenExpired:
- *                                  $ref: '#/components/examples/TokenExpired'
- *                              invalidToken:
- *                                  $ref: '#/components/examples/InvalidToken'
+ *                              RefreshTokenExpired:
+ *                                  $ref: '#/components/examples/RefreshTokenExpired'
+ *                              InvalidRefreshToken:
+ *                                  $ref: '#/components/examples/InvalidRefreshToken'
  *                              tokenNotFound:
  *                                  $ref: '#/components/examples/TokenNotFound'
  *              500:
  *                  $ref: '#/components/responses/InternalError'
  */
-router.post("/logout-all", authController.logoutAll);
 router.post("/logout-all", authController.logoutAll);
 
 module.exports = router;
