@@ -35,7 +35,9 @@
     "bcrypt": "^6.0.0",
     "dotenv": "^17.4.1",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.6.1",
     "express-validator": "^7.3.2",
+    "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.3",
     "knex": "^3.2.9",
     "pg": "^8.20.0",
@@ -71,7 +73,8 @@
       "/src/shared/config/database.js",
       "/src/shared/middlewares/http-logger.middleware.js",
       "/src/shared/utils/logger.js",
-      "/src/shared/docs"
+      "/src/shared/docs",
+      "/src/shared/middlewares/rate-limiter.middleware.js"
     ]
   }
 }
