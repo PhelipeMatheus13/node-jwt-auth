@@ -1,4 +1,5 @@
 const express = require("express");
+const helmet = require("helmet");
 const httpLogger = require("./shared/middlewares/http-logger.middleware");
 const errorHandler = require("./shared/middlewares/error.middleware");
 const requestContextMiddleware = require("./shared/middlewares/request-context.middleware");
@@ -16,6 +17,9 @@ app.use(httpLogger);
 
 // Add request context middleware to propagate requestId through async calls
 app.use(requestContextMiddleware);
+
+// Security headers com config default (CSP restritivo incluso).
+app.use(helmet());
 
 // Global rate limit, applied before body parsing for performance reasons
 app.use(globalLimiter);
