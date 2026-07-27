@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const authController = require("./auth.controller");
 const { validateLogin } = require("./auth.validators");
+const { loginLimiter, refreshLimiter } = require("../../shared/middlewares/rate-limiter.middleware");
 
 /**
  *  @swagger
@@ -44,7 +45,7 @@ const { validateLogin } = require("./auth.validators");
  *              500: 
  *                  $ref: '#/components/responses/InternalError'
  */
-router.post("/login", validateLogin, authController.login);
+router.post("/login", loginLimiter, validateLogin, authController.login);
 
 /**
  *  @swagger
@@ -95,7 +96,7 @@ router.post("/login", validateLogin, authController.login);
  *              500:
  *                  $ref: '#/components/responses/InternalError'
  */
-router.post("/refresh", authController.refresh);
+router.post("/refresh", refreshLimiter, authController.refresh);
 
 /**
  *  @swagger

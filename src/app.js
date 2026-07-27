@@ -2,6 +2,7 @@ const express = require("express");
 const httpLogger = require("./shared/middlewares/http-logger.middleware");
 const errorHandler = require("./shared/middlewares/error.middleware");
 const requestContextMiddleware = require("./shared/middlewares/request-context.middleware");
+const { globalLimiter } = require("./shared/middlewares/rate-limiter.middleware");
 
 // Import routes
 const swaggerRoutes = require("./shared/docs/swagger.routes");
@@ -15,6 +16,9 @@ app.use(httpLogger);
 
 // Add request context middleware to propagate requestId through async calls
 app.use(requestContextMiddleware);
+
+// Global rate limit, applied before body parsing for performance reasons
+app.use(globalLimiter);
 
 // Transform the body of the request into JSON
 app.use(express.json());
