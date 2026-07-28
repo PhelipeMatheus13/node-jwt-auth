@@ -39,6 +39,8 @@ A simple and secure authentication API built with Node.js, Express, and PostgreS
 - testcontainers
 - Pino (logger)
 - pino-http (HTTP request logger)
+- Helmet
+- express-rate-limit
 
 ## Database Setup (Development)
 
@@ -83,4 +85,10 @@ npm install
 
 > ⚠️ You must have Docker installed and properly configured, and be running in a Linux-based environment (or WSL on Windows) for the project to work correctly.
 
-> The logger.js and httpLogger.js modules do not have unit tests because they are essentially configurations for Pino/Pino HTTP. Their behavior is validated manually in the development environment, while the business logic related to logger usage is covered by tests in the consuming modules.
+> Some files are excluded from coverage (`coveragePathIgnorePatterns`) because they are configuration/bootstrap code rather than business logic: `server.js` and `app.js` (application entry points and wiring), `database.js` (Knex connection setup), `logger.js` / `http-logger.middleware.js` (Pino/Pino-HTTP configuration), the Swagger docs setup, and `rate-limiter.middleware.js` (a thin wrapper around `express-rate-limit` configuration). Their behavior is validated manually in development, while any business logic that depends on them is covered by tests in the consuming modules.
+
+> This project uses IP-based rate limiting to mitigate brute-force attacks. Account-based lockout (blocking a specific account after N failed attempts, regardless of source IP) was considered but intentionally not implemented — it would require additional complexity (failed-attempt tracking per user, unlock logic, and countermeasures against third-party lockout abuse) that isn't justified for a project without real users or a genuine attack surface.
+
+> Rate limiting uses the in-memory store (default in `express-rate-limit`), which is sufficient since this project runs as a single process and isn't intended to scale horizontally. A distributed store (e.g. Redis) would be required for a multi-instance deployment; the rate limiter is already structured (`createRateLimiter` factory) so swapping the store later is a config change, not a rewrite.
+
+> Email verification and password reset were intentionally left out of this project. They were considered, but concluded to be more about "product completeness" than additional authentication depth — the core hard problems of this project (token rotation, reuse detection, RBAC) are already solved, and adding email-based flows here would mean new infrastructure (email provider integration, a new table for verification/reset codes, new rate-limited routes, and their own test suite) without new technical learning. 
