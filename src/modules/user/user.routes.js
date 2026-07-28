@@ -3,6 +3,7 @@ const router = express.Router();
 const userController = require("./user.controller");
 const {checkToken, authorize} = require("../../shared/middlewares/auth.middleware");
 const { validateRegister } = require("./user.validators");
+const { registerLimiter } = require("../../shared/middlewares/rate-limiter.middleware");
 
 /**
  *  @swagger
@@ -45,7 +46,7 @@ const { validateRegister } = require("./user.validators");
  *              500:
  *                  $ref: '#/components/responses/InternalError'
  */
-router.post("/register", validateRegister, userController.register);
+router.post("/register", registerLimiter, validateRegister, userController.register);
 
 /**
  *  @swagger
