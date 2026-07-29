@@ -3,7 +3,7 @@
   "description": "REST API for JWT authentication and user management",
   "version": "1.0.0",
   "author": "Phelipe Matheus",
-  "license": "ISC",
+  "license": "MIT",
   "private": true,
   "engines": {
     "node": ">=22.22.0"
