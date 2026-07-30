@@ -9,5 +9,5 @@ module.exports = {
     saveRefreshToken,
     revokeRefreshTokenById,
     revokeAllRefreshTokensByUserId,
-    findRefreshTokenByJti
+    findRefreshTokenByJti,
 };

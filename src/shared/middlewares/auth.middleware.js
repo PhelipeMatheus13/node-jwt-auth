@@ -25,7 +25,7 @@ const checkToken = (req, res, next) => {
         logger.error({ err: error }, "Token validation failed:");
         next(error);
     }
-}
+};
 
 /**
  * Role-based authorization middleware.
@@ -45,5 +45,5 @@ const authorize = (...roles) => (req, res, next) => {
 
 module.exports = {
     checkToken,
-    authorize
+    authorize,
 };

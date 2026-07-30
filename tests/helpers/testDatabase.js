@@ -2,7 +2,7 @@ const { PostgreSqlContainer } = require("@testcontainers/postgresql");
 const knexBuilder = require("knex");
 const path = require("path");
 
-async function setupTestDatabase({ migrationDirectory }) {
+const setupTestDatabase = async ({ migrationDirectory }) => {
     // defines a default value for the directory
     const directory = migrationDirectory || path.join(process.cwd(), "database", "migrations");
 
@@ -41,6 +41,6 @@ async function setupTestDatabase({ migrationDirectory }) {
 
     // return the knex instance, container reference, and stop function for cleanup
     return { knex, container, stop };
-}
+};
 
 module.exports = { setupTestDatabase };

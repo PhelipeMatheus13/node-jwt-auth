@@ -1,7 +1,7 @@
 // Delays execution asynchronously without blocking the event loop
-function sleep(ms) {
+const sleep = (ms) => {
     return new Promise((resolve) => setTimeout(resolve, ms));
-}
+};
 
 /**
  * Executes an async function with retry and exponential backoff.
@@ -41,7 +41,7 @@ const withRetry = async (fn, options = {}) => {
     }
 
     throw lastError;
-}
+};
 
 module.exports = {
     withRetry,

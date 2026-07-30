@@ -48,5 +48,5 @@ describe("User DTOs (Unit)", () => {
 
             expect(output.password).toBeUndefined();
         });
-  });
+    });
 });
