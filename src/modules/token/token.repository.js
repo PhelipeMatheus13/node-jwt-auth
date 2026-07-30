@@ -21,7 +21,7 @@ const revokeById = async (id, trx = null) => {
         .where({id: id})
         .whereNull("revoked_at")
         .update({ revoked_at: knex.fn.now() });
-}
+};
 
 const revokeAllByUserId = async (userId) => {
     const knex = getKnex();
@@ -58,7 +58,7 @@ const findByJti = async (jti) => {
         .select("id", "token_hash", "user_id", "jti", "expires_at", "created_at", "revoked_at")
         .where({ jti: jti })
         .first();
-}
+};
 
 module.exports = {
     // writer
@@ -68,5 +68,5 @@ module.exports = {
     deleteExpired,
     deleteRevokedOlderThan,
     // reader
-    findByJti
+    findByJti,
 };

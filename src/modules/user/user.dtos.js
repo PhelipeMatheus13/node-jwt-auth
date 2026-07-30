@@ -33,4 +33,4 @@ const userOutputDTO = (user) => ({
 module.exports = {
     registerInputDTO,
     userOutputDTO,
-}
+};

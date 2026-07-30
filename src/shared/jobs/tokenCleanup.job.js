@@ -25,14 +25,14 @@ const runTokenCleanup = async () => {
     if (expiredCount || revokedCount) {
         logger.info(`Token cleanup completed: ${expiredCount ?? "N/A"} expired, ${revokedCount ?? "N/A"} revoked tokens removed`);
     }
-}
+};
 
 const stopTokenCleanupJob = () => {
     if (!intervalId) return;
 
     clearInterval(intervalId);
     intervalId = undefined;
-}
+};
 
 const startTokenCleanupJob = () => {
     if (intervalId) {
@@ -42,11 +42,11 @@ const startTokenCleanupJob = () => {
 
     runTokenCleanup();
     intervalId = setInterval(runTokenCleanup, TOKEN_CLEANUP_INTERVAL_MS);
-}
+};
 
 module.exports = {
   runTokenCleanup,
   startTokenCleanupJob,
-  stopTokenCleanupJob
+  stopTokenCleanupJob,
 };
 

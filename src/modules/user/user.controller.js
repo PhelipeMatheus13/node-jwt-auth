@@ -46,5 +46,5 @@ const deleteUser = asyncHandler(async (req, res) => {
 module.exports = {
     register,
     getUser,
-    deleteUser
+    deleteUser,
 }

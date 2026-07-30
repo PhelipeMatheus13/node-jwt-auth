@@ -10,7 +10,7 @@ const rateLimit = require("express-rate-limit");
  * @param {string} [options.errorMessage] - Custom error message returned when the rate limit is exceeded.
  * @returns {import("express").RequestHandler} Configured Express middleware.
  */
-function createRateLimiter({ identifier, windowMs, maxRequests, errorMessage }) {
+const createRateLimiter = ({ identifier, windowMs, maxRequests, errorMessage }) =>  {
     return rateLimit({
         identifier,
         windowMs,
@@ -25,7 +25,7 @@ function createRateLimiter({ identifier, windowMs, maxRequests, errorMessage }) 
             },
         },
     });
-}
+};
 
 const globalLimiter = createRateLimiter({
     identifier: "global",
